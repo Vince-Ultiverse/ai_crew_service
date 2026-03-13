@@ -135,9 +135,11 @@ export class DockerService {
       // Allow HTTP token auth (non-HTTPS)
       config.gateway.controlUi.allowInsecureAuth = true;
       // allowedOrigins required for bind=lan since v2026.2.26
+      const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
       config.gateway.controlUi.allowedOrigins = [
         `http://localhost:${agent.gateway_port}`,
         `http://127.0.0.1:${agent.gateway_port}`,
+        appBaseUrl,
       ];
       // Enable OpenAI-compatible HTTP API (disabled by default)
       config.gateway.http = config.gateway.http || {};
