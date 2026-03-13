@@ -77,7 +77,8 @@ export class DockerService {
     if (agent.llm_provider || agent.llm_model) {
       config.agents = config.agents || {};
       config.agents.defaults = config.agents.defaults || {};
-      const model = agent.llm_model || 'claude-sonnet-4-5';
+      // Strip date suffix (e.g. "claude-sonnet-4-5-20250929" → "claude-sonnet-4-5") to avoid OpenClaw parse bug
+      const model = (agent.llm_model || 'claude-sonnet-4-5').replace(/-\d{8}$/, '');
       const provider = agent.llm_provider || 'anthropic';
       // Format: "provider/model-id"
       config.agents.defaults.model = { primary: `${provider}/${model}` };
