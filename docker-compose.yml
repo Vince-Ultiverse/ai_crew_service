@@ -28,14 +28,14 @@ services:
       PORT: 3000
       OPENCLAW_IMAGE: alpine/openclaw:latest
       DOCKER_NETWORK: ai_crew_network
-      HOST_DATA_DIR: ${HOST_DATA_DIR:-/opt/ai_crew/data}
+      HOST_DATA_DIR: ${HOST_DATA_DIR:-/home/github-runner/ai_crew_data}
       SLACK_CONFIG_TOKEN: ${SLACK_CONFIG_TOKEN}
       SLACK_CONFIG_REFRESH_TOKEN: ${SLACK_CONFIG_REFRESH_TOKEN}
       SLACK_OAUTH_REDIRECT_URI: ${SLACK_OAUTH_REDIRECT_URI:-http://localhost:3000/api/slack-oauth/callback}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${HOST_DATA_DIR:-/opt/ai_crew/data}:/app/data
+      - ${HOST_DATA_DIR:-/home/github-runner/ai_crew_data}:/app/data
     depends_on:
       postgres:
         condition: service_healthy

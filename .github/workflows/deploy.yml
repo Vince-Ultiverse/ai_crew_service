@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Ensure data directory
-        run: sudo mkdir -p /opt/ai_crew/data && sudo chmod 777 /opt/ai_crew/data
+        run: mkdir -p /home/github-runner/ai_crew_data
 
       - name: Checkout code
         uses: actions/checkout@v4
