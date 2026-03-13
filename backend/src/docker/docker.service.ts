@@ -8,6 +8,10 @@ const OPENCLAW_IMAGE = process.env.OPENCLAW_IMAGE || 'alpine/openclaw:latest';
 const NETWORK_NAME = process.env.DOCKER_NETWORK || 'ai_crew_network';
 const DATA_DIR = path.resolve(__dirname, '../../data/agents');
 const SHARED_DIR = path.resolve(__dirname, '../../shared');
+// HOST_DATA_DIR: host-side absolute path for Docker bind mounts (needed when backend runs in a container)
+const HOST_DATA_DIR = process.env.HOST_DATA_DIR
+  ? path.join(process.env.HOST_DATA_DIR, 'agents')
+  : DATA_DIR;
 const PORT_START = 19000;
 
 function findDockerSocket(): string {
@@ -228,8 +232,8 @@ export class DockerService {
       name: `openclaw-${params.slug}`,
       HostConfig: {
         Binds: [
-          `${params.agentDir}/config:/home/node/.openclaw`,
-          `${params.agentDir}/workspace:/home/node/.openclaw/workspace`,
+          `${path.join(HOST_DATA_DIR, params.slug, 'config')}:/home/node/.openclaw`,
+          `${path.join(HOST_DATA_DIR, params.slug, 'workspace')}:/home/node/.openclaw/workspace`,
         ],
         Memory: memoryBytes,
         NanoCpus: Math.floor(params.cpuLimit * 1e9),

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agent } from './entities/agent.entity';
@@ -33,6 +33,11 @@ export class AgentsService {
   }
 
   async create(dto: CreateAgentDto): Promise<Agent> {
+    const existing = await this.agentRepo.findOne({ where: { slug: dto.slug } });
+    if (existing) {
+      throw new ConflictException(`Agent with slug "${dto.slug}" already exists`);
+    }
+
     const existingPorts = (await this.agentRepo.find({ select: ['gateway_port'] }))
       .map((a) => a.gateway_port)
       .filter(Boolean);

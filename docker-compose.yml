@@ -28,6 +28,7 @@ services:
       PORT: 3000
       OPENCLAW_IMAGE: alpine/openclaw:latest
       DOCKER_NETWORK: ai_crew_network
+      HOST_DATA_DIR: ${HOST_DATA_DIR:-${PWD}/backend/data}
       SLACK_CONFIG_TOKEN: ${SLACK_CONFIG_TOKEN}
       SLACK_CONFIG_REFRESH_TOKEN: ${SLACK_CONFIG_REFRESH_TOKEN}
       SLACK_OAUTH_REDIRECT_URI: ${SLACK_OAUTH_REDIRECT_URI:-http://localhost:3000/api/slack-oauth/callback}
