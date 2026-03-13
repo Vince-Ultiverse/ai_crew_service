@@ -22,7 +22,10 @@ jobs:
           docker compose up -d
 
       - name: Seed templates
-        run: docker compose exec -T backend node dist/scripts/seed-templates.js --force || true
+        run: |
+          cd backend
+          npm install --include=dev
+          npx ts-node -r dotenv/config scripts/seed-templates.ts || true
 
       - name: Cleanup old images
         run: docker image prune -f
