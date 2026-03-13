@@ -73,16 +73,8 @@ export class DockerService {
       ...agent.openclaw_config,
     };
 
-    // Model config: agents.defaults.model.primary = "provider/model-id"
-    if (agent.llm_provider || agent.llm_model) {
-      config.agents = config.agents || {};
-      config.agents.defaults = config.agents.defaults || {};
-      // Strip date suffix (e.g. "claude-sonnet-4-5-20250929" → "claude-sonnet-4-5") to avoid OpenClaw parse bug
-      const model = (agent.llm_model || 'claude-sonnet-4-5').replace(/-\d{8}$/, '');
-      const provider = agent.llm_provider || 'anthropic';
-      // Format: "provider/model-id"
-      config.agents.defaults.model = { primary: `${provider}/${model}` };
-    }
+    // Model config: set via OPENCLAW_MODEL env var instead of config file
+    // to avoid OpenClaw ANTHROPIC_MODEL_ALIASES initialization bug
 
     // API keys via env section (inline env vars)
     if (agent.llm_api_key && agent.llm_provider) {

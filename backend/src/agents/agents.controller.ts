@@ -105,7 +105,8 @@ export class AgentsController {
       await this.agentsService.saveChatMessages(id, [userMsg]);
     }
 
-    const gatewayUrl = `http://localhost:${agent.gateway_port}/v1/chat/completions`;
+    // Use Docker container name on the shared network (localhost won't work across containers)
+    const gatewayUrl = `http://openclaw-${agent.slug}:${agent.gateway_port}/v1/chat/completions`;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (agent.gateway_token) {
       headers['Authorization'] = `Bearer ${agent.gateway_token}`;

@@ -328,6 +328,12 @@ export class AgentsService {
     if (agent.gateway_token) {
       env['OPENCLAW_GATEWAY_TOKEN'] = agent.gateway_token;
     }
+    // Set model via env var to avoid OpenClaw config parse bug
+    if (agent.llm_provider || agent.llm_model) {
+      const model = (agent.llm_model || 'claude-sonnet-4-5').replace(/-\d{8}$/, '');
+      const provider = agent.llm_provider || 'anthropic';
+      env['OPENCLAW_MODEL'] = `${provider}/${model}`;
+    }
     return env;
   }
 
