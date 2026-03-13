@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 const OPENCLAW_IMAGE = process.env.OPENCLAW_IMAGE || 'alpine/openclaw:latest';
 const NETWORK_NAME = process.env.DOCKER_NETWORK || 'ai_crew_network';
 const DATA_DIR = path.resolve(__dirname, '../../data/agents');
+const SHARED_DIR = path.resolve(__dirname, '../../shared');
 const PORT_START = 19000;
 
 function findDockerSocket(): string {
@@ -142,6 +143,26 @@ export class DockerService {
     return config;
   }
 
+  private static sharedProtocolsCache: string | null = null;
+
+  static loadSharedProtocols(): string {
+    if (DockerService.sharedProtocolsCache !== null) return DockerService.sharedProtocolsCache;
+    if (!fs.existsSync(SHARED_DIR)) {
+      DockerService.sharedProtocolsCache = '';
+      return '';
+    }
+    const parts: string[] = [];
+    for (const file of fs.readdirSync(SHARED_DIR).sort()) {
+      if (!file.endsWith('.md')) continue;
+      const content = fs.readFileSync(path.join(SHARED_DIR, file), 'utf-8').trim();
+      if (content) parts.push(content);
+    }
+    DockerService.sharedProtocolsCache = parts.length
+      ? '\n\n---\n\n# 共享协议（全员必读）\n\n' + parts.join('\n\n---\n\n')
+      : '';
+    return DockerService.sharedProtocolsCache;
+  }
+
   private static readonly WORKSPACE_FILE_MAP: Record<string, string> = {
     system_prompt: 'IDENTITY.md',
     soul_prompt: 'SOUL.md',
@@ -175,6 +196,10 @@ export class DockerService {
         if (content) {
           if (agentName) {
             content = content.replace(/\{\{name\}\}/g, agentName);
+          }
+          // Append shared governance protocols to AGENTS.md
+          if (field === 'agents_prompt') {
+            content += DockerService.loadSharedProtocols();
           }
           fs.writeFileSync(filePath, content);
         } else if (fs.existsSync(filePath)) {
