@@ -10,8 +10,8 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Fix Docker-owned file permissions
-        run: sudo chown -R $(whoami) backend/data || true
+      - name: Ensure data directory
+        run: sudo mkdir -p /opt/ai_crew/data && sudo chmod 777 /opt/ai_crew/data
 
       - name: Checkout code
         uses: actions/checkout@v4
