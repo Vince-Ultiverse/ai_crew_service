@@ -185,8 +185,8 @@ export class DockerService {
     const configDir = path.join(agentDir, 'config');
     const workspaceDir = path.join(agentDir, 'workspace');
 
-    fs.mkdirSync(configDir, { recursive: true });
-    fs.mkdirSync(workspaceDir, { recursive: true });
+    fs.mkdirSync(configDir, { recursive: true, mode: 0o777 });
+    fs.mkdirSync(workspaceDir, { recursive: true, mode: 0o777 });
 
     const configPath = path.join(configDir, 'openclaw.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
