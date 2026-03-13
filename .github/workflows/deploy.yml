@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    environment: DEV
 
     steps:
       - name: Ensure data directory
