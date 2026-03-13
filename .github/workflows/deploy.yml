@@ -10,6 +10,9 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Clean Docker-owned files
+        run: sudo rm -rf backend/data/agents || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
