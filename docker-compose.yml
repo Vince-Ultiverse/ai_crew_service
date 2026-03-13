@@ -56,4 +56,5 @@ volumes:
 
 networks:
   ai_crew_network:
+    name: ai_crew_network
     driver: bridge

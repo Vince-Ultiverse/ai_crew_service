@@ -131,7 +131,9 @@ export class DockerService {
       config.gateway.controlUi.allowedOrigins = [
         `http://localhost:${agent.gateway_port}`,
         `http://127.0.0.1:${agent.gateway_port}`,
+        `http://139.99.168.236:${agent.gateway_port}`,
         appBaseUrl,
+        'http://139.99.168.236:5173',
       ];
       // Enable OpenAI-compatible HTTP API (disabled by default)
       config.gateway.http = config.gateway.http || {};
