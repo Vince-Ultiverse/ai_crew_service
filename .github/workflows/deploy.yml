@@ -1,0 +1,28 @@
+name: Deploy AI Crew
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Write .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Build and deploy
+        run: |
+          docker compose build --no-cache
+          docker compose up -d
+
+      - name: Seed templates
+        run: docker compose exec -T backend node dist/scripts/seed-templates.js --force || true
+
+      - name: Cleanup old images
+        run: docker image prune -f

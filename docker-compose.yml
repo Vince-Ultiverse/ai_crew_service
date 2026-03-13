@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aicrew
+      POSTGRES_PASSWORD: aicrew_password
+      POSTGRES_DB: aicrew
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ai_crew_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicrew"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://aicrew:aicrew_password@postgres:5432/aicrew
+      PORT: 3000
+      OPENCLAW_IMAGE: alpine/openclaw:latest
+      DOCKER_NETWORK: ai_crew_network
+      SLACK_CONFIG_TOKEN: ${SLACK_CONFIG_TOKEN}
+      SLACK_CONFIG_REFRESH_TOKEN: ${SLACK_CONFIG_REFRESH_TOKEN}
+      SLACK_OAUTH_REDIRECT_URI: ${SLACK_OAUTH_REDIRECT_URI:-http://localhost:3000/api/slack-oauth/callback}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai_crew_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - ai_crew_network
+
+volumes:
+  pgdata:
+
+networks:
+  ai_crew_network:
+    driver: bridge

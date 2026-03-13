@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+./backend/node_modules/
+./frontend/node_modules/
+
+# Build output
+./backend/dist/
+*.tsbuildinfo
+
+# Environment
+.env
+backend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Agent runtime data
+backend/data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Claude Code
+.claude/
