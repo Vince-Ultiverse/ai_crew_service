@@ -267,6 +267,7 @@ export default function AgentForm({
               <option value="512m">512 MB</option>
               <option value="1g">1 GB</option>
               <option value="2g">2 GB</option>
+              <option value="4g">4 GB</option>
             </select>
           </div>
           <div style={{ flex: 1 }}>
