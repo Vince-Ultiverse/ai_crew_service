@@ -2,7 +2,7 @@ export interface Agent {
   id: string;
   name: string;
   slug: string;
-  status: 'running' | 'stopped' | 'error' | 'creating';
+  status: 'running' | 'stopped' | 'error' | 'creating' | 'starting';
   role: string | null;
   container_id: string | null;
   slack_bot_token: string | null;
