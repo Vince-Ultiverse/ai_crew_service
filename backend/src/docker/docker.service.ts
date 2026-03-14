@@ -73,11 +73,23 @@ export class DockerService {
       ...agent.openclaw_config,
     };
 
-    // Model config: set via OPENCLAW_MODEL env var instead of config file
-    // to avoid OpenClaw ANTHROPIC_MODEL_ALIASES initialization bug
+    // Normalize provider name (e.g. "zai" → "z.ai")
+    const providerAliases: Record<string, string> = { zai: 'z.ai' };
+    const provider = providerAliases[agent.llm_provider] || agent.llm_provider || 'anthropic';
+
+    // Model config in openclaw.json (anthropic provider triggers ANTHROPIC_MODEL_ALIASES bug, skip it)
+    if (provider || agent.llm_model) {
+      const defaultModel = provider === 'z.ai' ? 'glm-5' : 'claude-sonnet-4-5';
+      const model = (agent.llm_model || defaultModel).replace(/-\d{8}$/, '');
+      if (provider !== 'anthropic') {
+        config.agents = config.agents || {};
+        config.agents.defaults = config.agents.defaults || {};
+        config.agents.defaults.model = { primary: `${provider}/${model}` };
+      }
+    }
 
     // API keys via env section (inline env vars)
-    if (agent.llm_api_key && agent.llm_provider) {
+    if (agent.llm_api_key && provider) {
       config.env = config.env || {};
       const envKeyMap: Record<string, string> = {
         anthropic: 'ANTHROPIC_API_KEY',
@@ -85,7 +97,7 @@ export class DockerService {
         'z.ai': 'ZAI_API_KEY',
         ollama: 'OLLAMA_API_KEY',
       };
-      const envKey = envKeyMap[agent.llm_provider] || `${agent.llm_provider.toUpperCase()}_API_KEY`;
+      const envKey = envKeyMap[provider] || `${provider.toUpperCase()}_API_KEY`;
       config.env[envKey] = agent.llm_api_key;
     }
 
@@ -297,7 +309,11 @@ export class DockerService {
     try {
       const container = this.docker.getContainer(containerId);
       const info = await container.inspect();
-      return info.State.Running ? 'running' : 'stopped';
+      if (!info.State.Running) return 'stopped';
+      // Check health status if health check is configured
+      const health = (info.State as any).Health?.Status;
+      if (health && health !== 'healthy') return 'starting';
+      return 'running';
     } catch {
       return 'error';
     }

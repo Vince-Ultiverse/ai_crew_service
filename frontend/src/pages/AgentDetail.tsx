@@ -187,7 +187,7 @@ export default function AgentDetail() {
       {/* Tab bar */}
       <div style={{ borderBottom: `2px solid ${colors.borderDark}`, marginBottom: 0, display: 'flex' }}>
         <button style={tabStyle(tab === 'info')} onClick={() => setTab('info')}>{labels.tabs.info}</button>
-        {agent.status === 'running' && agent.gateway_port && (
+        {(agent.status === 'running' || agent.status === 'starting') && agent.gateway_port && (
           <button style={tabStyle(tab === 'webui')} onClick={() => setTab('webui')}>Chat</button>
         )}
         <button style={tabStyle(tab === 'slack')} onClick={() => setTab('slack')}>Slack</button>
@@ -261,6 +261,7 @@ export default function AgentDetail() {
           <AgentChat
             agentId={agent.id}
             agentName={agent.name}
+            agentStatus={agent.status}
           />
         </div>
       )}

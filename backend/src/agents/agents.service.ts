@@ -316,23 +316,20 @@ export class AgentsService {
 
   private buildAgentEnv(agent: Agent): Record<string, string> {
     const env: Record<string, string> = {};
-    if (agent.llm_api_key && agent.llm_provider) {
+    const providerAliases: Record<string, string> = { zai: 'z.ai' };
+    const provider = providerAliases[agent.llm_provider] || agent.llm_provider || 'anthropic';
+
+    if (agent.llm_api_key && provider) {
       const envKeyMap: Record<string, string> = {
         anthropic: 'ANTHROPIC_API_KEY',
         openai: 'OPENAI_API_KEY',
         'z.ai': 'ZAI_API_KEY',
       };
-      const key = envKeyMap[agent.llm_provider] || `${agent.llm_provider.toUpperCase()}_API_KEY`;
+      const key = envKeyMap[provider] || `${provider.toUpperCase()}_API_KEY`;
       env[key] = agent.llm_api_key;
     }
     if (agent.gateway_token) {
       env['OPENCLAW_GATEWAY_TOKEN'] = agent.gateway_token;
-    }
-    // Set model via env var to avoid OpenClaw config parse bug
-    if (agent.llm_provider || agent.llm_model) {
-      const model = (agent.llm_model || 'claude-sonnet-4-5').replace(/-\d{8}$/, '');
-      const provider = agent.llm_provider || 'anthropic';
-      env['OPENCLAW_MODEL'] = `${provider}/${model}`;
     }
     return env;
   }

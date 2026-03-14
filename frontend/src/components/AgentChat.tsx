@@ -7,9 +7,10 @@ interface Message {
   content: string;
 }
 
-export default function AgentChat({ agentId, agentName }: {
+export default function AgentChat({ agentId, agentName, agentStatus }: {
   agentId: string;
   agentName: string;
+  agentStatus?: string;
 }) {
   const { theme } = useTheme();
   const { colors, pixelInput, pixelButtonSmall } = theme;
@@ -147,6 +148,22 @@ export default function AgentChat({ agentId, agentName }: {
       sendMessage();
     }
   };
+
+  const isStarting = agentStatus === 'starting' || agentStatus === 'creating';
+
+  if (isStarting) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 240px)', alignItems: 'center', justifyContent: 'center', background: colors.logBg }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>&#9203;</div>
+        <div style={{ color: colors.textLight, fontSize: 13, fontFamily: theme.fonts.mono }}>
+          {agentName} is starting up...
+        </div>
+        <div style={{ color: colors.textLight, fontSize: 11, marginTop: 8 }}>
+          Please wait for the container to become healthy
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 240px)' }}>

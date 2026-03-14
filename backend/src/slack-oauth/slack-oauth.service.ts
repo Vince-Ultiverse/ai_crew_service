@@ -8,9 +8,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import { Agent } from '../agents/entities/agent.entity';
+import { Setting } from '../settings/settings.entity';
 import { buildSlackManifest } from './slack-manifest';
 
 interface SlackTokens {
@@ -19,7 +18,7 @@ interface SlackTokens {
   expires_at: number; // unix timestamp in ms
 }
 
-const TOKEN_FILE = join(process.cwd(), 'data', 'slack-config-tokens.json');
+const SLACK_TOKENS_KEY = 'slack_config_tokens';
 
 @Injectable()
 export class SlackOAuthService {
@@ -29,8 +28,10 @@ export class SlackOAuthService {
   constructor(
     @InjectRepository(Agent)
     private agentRepo: Repository<Agent>,
+    @InjectRepository(Setting)
+    private settingRepo: Repository<Setting>,
   ) {
-    this.loadTokensFromDisk();
+    this.loadTokensFromDb();
   }
 
   /**
@@ -90,7 +91,7 @@ export class SlackOAuthService {
       };
 
       this.cachedTokens = tokens;
-      this.saveTokensToDisk(tokens);
+      await this.saveTokensToDb(tokens);
       this.logger.log('Slack config token refreshed successfully');
       return tokens;
     } catch (err) {
@@ -99,25 +100,23 @@ export class SlackOAuthService {
     }
   }
 
-  private loadTokensFromDisk(): void {
+  private async loadTokensFromDb(): Promise<void> {
     try {
-      if (existsSync(TOKEN_FILE)) {
-        const raw = readFileSync(TOKEN_FILE, 'utf-8');
-        this.cachedTokens = JSON.parse(raw);
-        this.logger.log('Loaded cached Slack config tokens from disk');
+      const setting = await this.settingRepo.findOne({ where: { key: SLACK_TOKENS_KEY } });
+      if (setting?.value) {
+        this.cachedTokens = setting.value as unknown as SlackTokens;
+        this.logger.log('Loaded cached Slack config tokens from database');
       }
     } catch {
-      this.logger.warn('Failed to load cached Slack tokens from disk');
+      this.logger.warn('Failed to load cached Slack tokens from database');
     }
   }
 
-  private saveTokensToDisk(tokens: SlackTokens): void {
+  private async saveTokensToDb(tokens: SlackTokens): Promise<void> {
     try {
-      const dir = join(process.cwd(), 'data');
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));
+      await this.settingRepo.save({ key: SLACK_TOKENS_KEY, value: tokens as any });
     } catch (err) {
-      this.logger.warn(`Failed to persist Slack tokens to disk: ${err}`);
+      this.logger.warn(`Failed to persist Slack tokens to database: ${err}`);
     }
   }
 
