@@ -75,7 +75,7 @@ export class DockerService {
 
     // Normalize provider name (e.g. "zai" → "z.ai")
     const providerAliases: Record<string, string> = { zai: 'z.ai' };
-    const provider = providerAliases[agent.llm_provider] || agent.llm_provider || 'anthropic';
+    const provider = (agent.llm_provider && providerAliases[agent.llm_provider]) || agent.llm_provider || 'anthropic';
 
     // Model config in openclaw.json (anthropic provider triggers ANTHROPIC_MODEL_ALIASES bug, skip it)
     if (provider || agent.llm_model) {
