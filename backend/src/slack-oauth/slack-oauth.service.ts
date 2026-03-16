@@ -42,38 +42,38 @@ export class SlackOAuthService implements OnModuleInit {
 
   /**
    * Get a valid Slack Configuration Token, refreshing if expired.
+   * All tokens are stored in and read from the database (settings table).
    */
   private async getConfigToken(): Promise<string> {
-    // Ensure DB tokens are loaded before proceeding
     await this.tokensLoaded;
 
-    // If we have cached tokens and they're still valid (with 5min buffer), use them
+    // If cached tokens are still valid (with 5min buffer), use them
     if (this.cachedTokens && Date.now() < this.cachedTokens.expires_at - 5 * 60 * 1000) {
       return this.cachedTokens.access_token;
     }
 
-    // Try to refresh if we have a refresh token
-    const refreshToken =
-      this.cachedTokens?.refresh_token || process.env.SLACK_CONFIG_REFRESH_TOKEN;
+    // Reload from DB in case another instance rotated the token
+    await this.loadTokensFromDb();
 
+    // Check again after reload
+    if (this.cachedTokens && Date.now() < this.cachedTokens.expires_at - 5 * 60 * 1000) {
+      return this.cachedTokens.access_token;
+    }
+
+    // Token expired — refresh using the DB refresh_token
+    const refreshToken = this.cachedTokens?.refresh_token;
     if (refreshToken) {
-      this.logger.log('Config token expired or missing, attempting refresh...');
+      this.logger.log('Config token expired, refreshing from DB refresh_token...');
       const refreshed = await this.refreshConfigToken(refreshToken);
       if (refreshed) {
         return refreshed.access_token;
       }
     }
 
-    // Fall back to env var (may be expired)
-    const envToken = process.env.SLACK_CONFIG_TOKEN;
-    if (!envToken) {
-      throw new BadRequestException(
-        'SLACK_CONFIG_TOKEN is not configured and no refresh token available. ' +
-          'Please set SLACK_CONFIG_TOKEN and SLACK_CONFIG_REFRESH_TOKEN in environment variables.',
-      );
-    }
-
-    return envToken;
+    throw new BadRequestException(
+      'No valid Slack config token in database. ' +
+        'Please insert a record into the settings table with key "slack_config_tokens" containing access_token, refresh_token, and expires_at.',
+    );
   }
 
   /**
@@ -155,10 +155,11 @@ export class SlackOAuthService implements OnModuleInit {
     if (!createData.ok) {
       this.logger.error(`apps.manifest.create failed: ${JSON.stringify(createData)}`);
 
-      // If token expired during request, try one more time with a fresh token
+      // If token expired during request, force refresh from DB and retry once
       if (createData.error === 'token_expired' || createData.error === 'invalid_auth') {
-        const refreshToken =
-          this.cachedTokens?.refresh_token || process.env.SLACK_CONFIG_REFRESH_TOKEN;
+        // Reload from DB in case another process rotated the token
+        await this.loadTokensFromDb();
+        const refreshToken = this.cachedTokens?.refresh_token;
         if (refreshToken) {
           this.logger.log('Token expired during API call, forcing refresh...');
           const refreshed = await this.refreshConfigToken(refreshToken);
@@ -167,8 +168,8 @@ export class SlackOAuthService implements OnModuleInit {
           }
         }
         throw new BadRequestException(
-          'Slack Configuration Token has expired and could not be refreshed. ' +
-            'Please provide a valid SLACK_CONFIG_REFRESH_TOKEN or generate a new config token at api.slack.com/apps.',
+          'Slack config token has expired and could not be refreshed. ' +
+            'Please update slack_config_tokens in the database.',
         );
       }
 
