@@ -47,27 +47,47 @@ export class SlackOAuthService implements OnModuleInit {
   private async getConfigToken(): Promise<string> {
     await this.tokensLoaded;
 
+    this.logger.log(
+      `[getConfigToken] cachedTokens exists: ${!!this.cachedTokens}, ` +
+        `expires_at: ${this.cachedTokens?.expires_at}, ` +
+        `now: ${Date.now()}, ` +
+        `has_refresh: ${!!this.cachedTokens?.refresh_token}, ` +
+        `has_access: ${!!this.cachedTokens?.access_token}`,
+    );
+
     // If cached tokens are still valid (with 5min buffer), use them
     if (this.cachedTokens && Date.now() < this.cachedTokens.expires_at - 5 * 60 * 1000) {
+      this.logger.log('[getConfigToken] Using cached token (still valid)');
       return this.cachedTokens.access_token;
     }
 
     // Reload from DB in case another instance rotated the token
+    this.logger.log('[getConfigToken] Cache miss or expired, reloading from DB...');
     await this.loadTokensFromDb();
+
+    this.logger.log(
+      `[getConfigToken] After DB reload: cachedTokens exists: ${!!this.cachedTokens}, ` +
+        `expires_at: ${this.cachedTokens?.expires_at}, ` +
+        `has_refresh: ${!!this.cachedTokens?.refresh_token}`,
+    );
 
     // Check again after reload
     if (this.cachedTokens && Date.now() < this.cachedTokens.expires_at - 5 * 60 * 1000) {
+      this.logger.log('[getConfigToken] Using DB-reloaded token (still valid)');
       return this.cachedTokens.access_token;
     }
 
     // Token expired — refresh using the DB refresh_token
     const refreshToken = this.cachedTokens?.refresh_token;
     if (refreshToken) {
-      this.logger.log('Config token expired, refreshing from DB refresh_token...');
+      this.logger.log(`[getConfigToken] Token expired, attempting refresh with token: ${refreshToken.substring(0, 20)}...`);
       const refreshed = await this.refreshConfigToken(refreshToken);
       if (refreshed) {
         return refreshed.access_token;
       }
+      this.logger.error('[getConfigToken] Refresh returned null');
+    } else {
+      this.logger.error('[getConfigToken] No refresh_token available in cachedTokens');
     }
 
     throw new BadRequestException(
@@ -88,6 +108,7 @@ export class SlackOAuthService implements OnModuleInit {
       });
       const data = await res.json();
 
+      this.logger.log(`[refreshConfigToken] Slack API response: ok=${data.ok}, error=${data.error}, has_token=${!!data.token}, has_refresh=${!!data.refresh_token}`);
       if (!data.ok) {
         this.logger.error(`Token refresh failed: ${data.error}`);
         return null;
@@ -112,12 +133,13 @@ export class SlackOAuthService implements OnModuleInit {
   private async loadTokensFromDb(): Promise<void> {
     try {
       const setting = await this.settingRepo.findOne({ where: { key: SLACK_TOKENS_KEY } });
+      this.logger.log(`[loadTokensFromDb] setting found: ${!!setting}, has value: ${!!setting?.value}, keys: ${setting?.value ? Object.keys(setting.value).join(',') : 'none'}`);
       if (setting?.value) {
         this.cachedTokens = setting.value as unknown as SlackTokens;
-        this.logger.log('Loaded cached Slack config tokens from database');
+        this.logger.log(`[loadTokensFromDb] Loaded tokens - expires_at: ${this.cachedTokens.expires_at}, has_refresh: ${!!this.cachedTokens.refresh_token}`);
       }
-    } catch {
-      this.logger.warn('Failed to load cached Slack tokens from database');
+    } catch (err) {
+      this.logger.error(`[loadTokensFromDb] FAILED to load tokens: ${err}`);
     }
   }
 
