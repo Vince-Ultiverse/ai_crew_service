@@ -64,6 +64,50 @@ export interface DashboardStats {
   error: number;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  goal: string | null;
+  status: 'draft' | 'running' | 'paused' | 'completed' | 'failed';
+  max_turns: number;
+  current_turn: number;
+  current_agent_id: string | null;
+  pause_reason: string | null;
+  coordinator_agent_id: string | null;
+  members: ProjectMember[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  agent_id: string;
+  agent: Agent;
+  order_index: number;
+  consecutive_failures: number;
+  joined_at: string;
+}
+
+export interface ProjectMessage {
+  id: string;
+  project_id: string;
+  role: 'user' | 'assistant' | 'system';
+  agent_id: string | null;
+  agent_name: string | null;
+  content: string;
+  turn_number: number;
+  created_at: string;
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  goal?: string;
+  max_turns?: number;
+  agent_ids?: string[];
+  coordinator_agent_id?: string;
+}
+
 export interface CreateAgentPayload {
   name: string;
   slug: string;

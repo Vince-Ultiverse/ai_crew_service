@@ -53,6 +53,7 @@ export const severanceTheme: Theme = {
     navItems: [
       { path: '/', label: 'Overview', icon: '\u{1F5A5}' },
       { path: '/agents', label: 'Innies', icon: '\u{1F9D1}\u{200D}\u{1F4BC}' },
+      { path: '/projects', label: 'Refinements', icon: '\u{1F5C2}' },
       { path: '/templates', label: 'Protocols', icon: '\u{1F4CB}' },
     ],
     pageHeadings: {
@@ -61,6 +62,8 @@ export const severanceTheme: Theme = {
       templates: 'Protocol Library',
       agentCreate: 'Onboard Refiner',
       agentEdit: 'Update Personnel',
+      projectList: 'Refinement Sessions',
+      projectCreate: 'New Refinement',
     },
     dashboardStats: {
       total: 'Personnel',

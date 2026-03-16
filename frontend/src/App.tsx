@@ -5,6 +5,9 @@ import AgentList from './pages/AgentList';
 import AgentCreate from './pages/AgentCreate';
 import AgentDetail from './pages/AgentDetail';
 import Templates from './pages/Templates';
+import ProjectList from './pages/ProjectList';
+import ProjectCreate from './pages/ProjectCreate';
+import ProjectDetail from './pages/ProjectDetail';
 
 export default function App() {
   return (
@@ -15,6 +18,9 @@ export default function App() {
         <Route path="/agents/new" element={<AgentCreate />} />
         <Route path="/agents/:id/edit" element={<AgentCreate />} />
         <Route path="/agents/:id" element={<AgentDetail />} />
+        <Route path="/projects" element={<ProjectList />} />
+        <Route path="/projects/new" element={<ProjectCreate />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/templates" element={<Templates />} />
       </Routes>
     </Layout>

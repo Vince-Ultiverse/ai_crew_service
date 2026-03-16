@@ -1,4 +1,4 @@
-import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage } from '../types';
+import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage, Project, ProjectMessage, CreateProjectPayload } from '../types';
 
 const BASE = '/api';
 
@@ -85,4 +85,30 @@ export const api = {
     request<Template>(`/templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTemplate: (id: string) =>
     request<void>(`/templates/${id}`, { method: 'DELETE' }),
+
+  // Projects
+  getProjects: () => request<Project[]>('/projects'),
+  getProject: (id: string) => request<Project>(`/projects/${id}`),
+  createProject: (data: CreateProjectPayload) =>
+    request<Project>('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  updateProject: (id: string, data: Partial<CreateProjectPayload>) =>
+    request<Project>(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProject: (id: string) =>
+    request<void>(`/projects/${id}`, { method: 'DELETE' }),
+  startProject: (id: string) =>
+    request<Project>(`/projects/${id}/start`, { method: 'POST' }),
+  pauseProject: (id: string) =>
+    request<Project>(`/projects/${id}/pause`, { method: 'POST' }),
+  resumeProject: (id: string) =>
+    request<Project>(`/projects/${id}/resume`, { method: 'POST' }),
+  completeProject: (id: string) =>
+    request<Project>(`/projects/${id}/complete`, { method: 'POST' }),
+  addProjectMembers: (id: string, agentIds: string[]) =>
+    request<Project>(`/projects/${id}/members`, { method: 'POST', body: JSON.stringify({ agent_ids: agentIds }) }),
+  removeProjectMember: (id: string, agentId: string) =>
+    request<Project>(`/projects/${id}/members/${agentId}`, { method: 'DELETE' }),
+  getProjectMessages: (id: string, limit = 100) =>
+    request<ProjectMessage[]>(`/projects/${id}/messages?limit=${limit}`),
+  sendProjectMessage: (id: string, content: string) =>
+    request<ProjectMessage>(`/projects/${id}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
 };

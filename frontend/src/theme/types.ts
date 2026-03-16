@@ -33,6 +33,8 @@ export interface ThemeLabels {
     templates: string;
     agentCreate: string;
     agentEdit: string;
+    projectList: string;
+    projectCreate: string;
   };
   dashboardStats: {
     total: string;

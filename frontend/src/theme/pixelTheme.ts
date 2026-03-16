@@ -53,6 +53,7 @@ export const pixelTheme: Theme = {
     navItems: [
       { path: '/', label: 'Lobby', icon: '\u{1F3E2}' },
       { path: '/agents', label: 'Desks', icon: '\u{1FA91}' },
+      { path: '/projects', label: 'War Room', icon: '\u{1F4AC}' },
       { path: '/templates', label: 'Archive', icon: '\u{1F4C1}' },
     ],
     pageHeadings: {
@@ -61,6 +62,8 @@ export const pixelTheme: Theme = {
       templates: 'Templates Archive',
       agentCreate: 'Employee Registration',
       agentEdit: 'Update Profile',
+      projectList: 'War Room',
+      projectCreate: 'New Mission',
     },
     dashboardStats: {
       total: 'All Staff',

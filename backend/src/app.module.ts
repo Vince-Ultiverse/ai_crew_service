@@ -7,6 +7,7 @@ import { DockerModule } from './docker/docker.module';
 import { HealthModule } from './health/health.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SlackOAuthModule } from './slack-oauth/slack-oauth.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SlackOAuthModule } from './slack-oauth/slack-oauth.module';
     HealthModule,
     DashboardModule,
     SlackOAuthModule,
+    ProjectsModule,
   ],
 })
 export class AppModule {}
