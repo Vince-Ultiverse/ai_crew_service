@@ -91,6 +91,16 @@ export class OrchestratorService implements OnModuleInit {
           break;
         }
 
+        // Check for @User — pause and wait for user input
+        if (lastMsg?.role === 'assistant' && /\b@User\b/i.test(lastMsg.content || '')) {
+          await this.projectsService.setStatus(projectId, 'paused', 'Waiting for user input');
+          await this.projectsService.saveMessage(
+            projectId, 'system',
+            `${lastMsg.agent_name || 'An agent'} is asking for your input. Please reply to continue.`,
+          );
+          break;
+        }
+
         // Select next agent
         const members = project.members?.filter((m) => m.agent) || [];
         if (members.length === 0) {
@@ -241,6 +251,7 @@ export class OrchestratorService implements OnModuleInit {
       `\nInstructions:`,
       `- Collaborate with your team to achieve the project goal.`,
       `- Use @Name to direct a message to a specific team member.`,
+      `- Use @User when you need input, clarification, or a decision from the human user. The conversation will pause until they reply.`,
       `- When the project goal is fully achieved, include [DONE] in your message.`,
       `- Stay focused on your role and expertise.`,
       `- Build on what others have said; avoid repeating.`,

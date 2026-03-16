@@ -27,16 +27,24 @@ jobs:
           SLACK_OAUTH_REDIRECT_URI=${{ vars.SLACK_OAUTH_REDIRECT_URI }}
           EOF
 
+      - name: Remove stale containers
+        run: docker compose down --remove-orphans || true
+
       - name: Build and deploy
         run: |
           docker compose build --no-cache
           docker compose up -d
 
-      - name: Seed templates
+      - name: Wait for backend healthy
         run: |
-          cd backend
-          npm install --include=dev
-          npx ts-node -r dotenv/config scripts/seed-templates.ts || true
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Backend is healthy"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
 
       - name: Cleanup old images
         run: docker image prune -f

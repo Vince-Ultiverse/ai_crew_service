@@ -119,7 +119,17 @@ export class ProjectsController {
 
   @Post(':id/messages')
   async sendMessage(@Param('id') id: string, @Body() dto: SendMessageDto) {
-    return this.projectsService.saveMessage(id, 'user', dto.content);
+    const msg = await this.projectsService.saveMessage(id, 'user', dto.content);
+
+    // Auto-resume if paused waiting for user input
+    const project = await this.projectsService.findOne(id);
+    if (project.status === 'paused' && project.pause_reason === 'Waiting for user input') {
+      await this.projectsService.setStatus(id, 'running');
+      await this.projectsService.saveMessage(id, 'system', 'User replied. Resuming...');
+      this.orchestratorService.startLoop(id);
+    }
+
+    return msg;
   }
 
   @Sse(':id/messages/stream')

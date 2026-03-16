@@ -8,7 +8,7 @@ import { useTheme } from '../theme';
 
 export default function ProjectDetail() {
   const { theme } = useTheme();
-  const { colors, pixelCard, pixelButtonSmall, pixelHeading } = theme;
+  const { colors, pixelCard, pixelHeading } = theme;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
@@ -20,9 +20,9 @@ export default function ProjectDetail() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-refresh project status when running
+  // Auto-refresh project status when running or paused
   useEffect(() => {
-    if (!project || project.status !== 'running') return;
+    if (!project || (project.status !== 'running' && project.status !== 'paused')) return;
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [project?.status, load]);
@@ -64,82 +64,94 @@ export default function ProjectDetail() {
     : project.status === 'failed' ? colors.error
     : colors.stopped;
 
+  const isWaitingForUser = project.status === 'paused' && project.pause_reason === 'Waiting for user input';
+
   return (
-    <div>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'calc(100vh - 48px)',
+      overflow: 'hidden',
+    }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div>
-          <h1 style={{ ...pixelHeading(), fontSize: 14, marginBottom: 8 }}>{project.name}</h1>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{
-              display: 'inline-block',
-              padding: '2px 8px',
-              fontSize: 9,
-              fontWeight: 700,
-              fontFamily: theme.fonts.heading,
-              background: statusColor,
-              color: '#fff',
-              border: `2px solid ${colors.borderDark}`,
-            }}>
-              {project.status.toUpperCase()}
-            </span>
-            <span style={{ color: colors.textLight, fontSize: 12 }}>
-              Turn {project.current_turn} / {project.max_turns}
-            </span>
-          </div>
-          {project.pause_reason && project.status === 'paused' && (
-            <div style={{
-              marginTop: 8,
-              padding: '6px 10px',
-              fontSize: 11,
-              background: '#fff3c4',
-              border: `2px solid ${colors.creating}`,
-              color: '#6b5900',
-            }}>
-              Paused: {project.pause_reason}
+      <div style={{ flexShrink: 0, marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ ...pixelHeading(), fontSize: 14, marginBottom: 8 }}>{project.name}</h1>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{
+                display: 'inline-block',
+                padding: '2px 8px',
+                fontSize: 9,
+                fontWeight: 700,
+                fontFamily: theme.fonts.heading,
+                background: statusColor,
+                color: '#fff',
+                border: `2px solid ${colors.borderDark}`,
+              }}>
+                {project.status.toUpperCase()}
+              </span>
+              <span style={{ color: colors.textLight, fontSize: 12 }}>
+                Turn {project.current_turn} / {project.max_turns}
+              </span>
             </div>
-          )}
+            {project.pause_reason && project.status === 'paused' && (
+              <div style={{
+                marginTop: 8,
+                padding: '6px 10px',
+                fontSize: 11,
+                background: isWaitingForUser ? '#e3f2fd' : '#fff3c4',
+                border: `2px solid ${isWaitingForUser ? '#42a5f5' : colors.creating}`,
+                color: isWaitingForUser ? '#1565c0' : '#6b5900',
+                fontWeight: isWaitingForUser ? 700 : 400,
+              }}>
+                {isWaitingForUser
+                  ? 'An agent needs your input. Type your reply below to continue.'
+                  : `Paused: ${project.pause_reason}`}
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
+            {(project.status === 'draft' || project.status === 'paused') && project.members?.length > 0 && (
+              <DetailBtn label={project.status === 'draft' ? 'Start' : 'Resume'} bg="#4a9e5b"
+                onClick={() => handleAction(project.status === 'draft' ? 'start' : 'resume')} />
+            )}
+            {project.status === 'running' && (
+              <DetailBtn label="Pause" bg="#b8860b" onClick={() => handleAction('pause')} />
+            )}
+            {project.status === 'running' && (
+              <DetailBtn label="Complete" bg={colors.accent} onClick={() => handleAction('complete')} />
+            )}
+            <DetailBtn label="Delete" bg="#c94040" onClick={() => handleAction('delete')} />
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {(project.status === 'draft' || project.status === 'paused') && project.members?.length > 0 && (
-            <DetailBtn label={project.status === 'draft' ? 'Start' : 'Resume'} bg="#4a9e5b"
-              onClick={() => handleAction(project.status === 'draft' ? 'start' : 'resume')} />
-          )}
-          {project.status === 'running' && (
-            <DetailBtn label="Pause" bg="#b8860b" onClick={() => handleAction('pause')} />
-          )}
-          {project.status === 'running' && (
-            <DetailBtn label="Complete" bg={colors.accent} onClick={() => handleAction('complete')} />
-          )}
-          <DetailBtn label="Delete" bg="#c94040" onClick={() => handleAction('delete')} />
-        </div>
+
+        {/* Goal */}
+        {project.goal && (
+          <div style={{
+            padding: '8px 14px',
+            marginTop: 12,
+            fontSize: 13,
+            color: colors.text,
+            background: colors.card,
+            border: `2px solid ${colors.border}`,
+            lineHeight: 1.6,
+          }}>
+            <strong style={{ fontSize: 10, fontFamily: theme.fonts.heading }}>Goal: </strong>
+            {project.goal}
+          </div>
+        )}
       </div>
 
-      {/* Goal */}
-      {project.goal && (
-        <div style={{
-          padding: '10px 14px',
-          marginBottom: 16,
-          fontSize: 13,
-          color: colors.text,
-          background: colors.card,
-          border: `2px solid ${colors.border}`,
-          lineHeight: 1.6,
-        }}>
-          <strong style={{ fontSize: 10, fontFamily: theme.fonts.heading }}>Goal: </strong>
-          {project.goal}
-        </div>
-      )}
-
-      {/* Main layout: sidebar + chat */}
+      {/* Main layout: sidebar + chat — fills remaining space */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '240px 1fr',
         gap: 0,
         border: `2px solid ${colors.borderDark}`,
+        flex: 1,
+        minHeight: 0,
         overflow: 'hidden',
-        height: 'calc(100vh - 280px)',
-        minHeight: 400,
       }}>
         {/* Sidebar: members */}
         <div style={{
