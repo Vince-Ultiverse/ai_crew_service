@@ -71,7 +71,6 @@ export default function ProjectDetail() {
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{ flexShrink: 0, marginBottom: 12 }}>
