@@ -21,6 +21,7 @@ jobs:
         run: |
           cat > .env << 'EOF'
           APP_BASE_URL=${{ vars.APP_BASE_URL }}
+          EXTRA_ALLOWED_ORIGINS=${{ vars.EXTRA_ALLOWED_ORIGINS }}
           SLACK_CONFIG_TOKEN=${{ vars.SLACK_CONFIG_TOKEN }}
           SLACK_CONFIG_REFRESH_TOKEN=${{ vars.SLACK_CONFIG_REFRESH_TOKEN }}
           SLACK_OAUTH_REDIRECT_URI=${{ vars.SLACK_OAUTH_REDIRECT_URI }}

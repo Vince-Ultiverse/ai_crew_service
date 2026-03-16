@@ -140,13 +140,26 @@ export class DockerService {
       config.gateway.controlUi.allowInsecureAuth = true;
       // allowedOrigins required for bind=lan since v2026.2.26
       const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
-      config.gateway.controlUi.allowedOrigins = [
+      // Derive server host from APP_BASE_URL for gateway origins
+      let serverHost: string | null = null;
+      try { serverHost = new URL(appBaseUrl).hostname; } catch {}
+      const origins = [
         `http://localhost:${agent.gateway_port}`,
         `http://127.0.0.1:${agent.gateway_port}`,
-        `http://139.99.168.236:${agent.gateway_port}`,
         appBaseUrl,
-        'http://139.99.168.236:5173',
       ];
+      if (serverHost && serverHost !== 'localhost' && serverHost !== '127.0.0.1') {
+        origins.push(`http://${serverHost}:${agent.gateway_port}`);
+      }
+      // Extra origins for multi-server setups (comma-separated)
+      const extra = process.env.EXTRA_ALLOWED_ORIGINS;
+      if (extra) {
+        for (const o of extra.split(',')) {
+          const trimmed = o.trim();
+          if (trimmed) origins.push(trimmed);
+        }
+      }
+      config.gateway.controlUi.allowedOrigins = origins;
       // Enable OpenAI-compatible HTTP API (disabled by default)
       config.gateway.http = config.gateway.http || {};
       config.gateway.http.endpoints = config.gateway.http.endpoints || {};
