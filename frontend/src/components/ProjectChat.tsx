@@ -166,7 +166,7 @@ export default function ProjectChat({ projectId, projectStatus, members }: {
   const isThinking = isRunning && lastMsg && lastMsg.role !== 'system';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'scroll' }}>
       {/* Messages */}
       <div style={{
         flex: 1,

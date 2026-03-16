@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -21,9 +22,10 @@ interface SlackTokens {
 const SLACK_TOKENS_KEY = 'slack_config_tokens';
 
 @Injectable()
-export class SlackOAuthService {
+export class SlackOAuthService implements OnModuleInit {
   private readonly logger = new Logger(SlackOAuthService.name);
   private cachedTokens: SlackTokens | null = null;
+  private tokensLoaded: Promise<void>;
 
   constructor(
     @InjectRepository(Agent)
@@ -31,13 +33,20 @@ export class SlackOAuthService {
     @InjectRepository(Setting)
     private settingRepo: Repository<Setting>,
   ) {
-    this.loadTokensFromDb();
+    this.tokensLoaded = this.loadTokensFromDb();
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.tokensLoaded;
   }
 
   /**
    * Get a valid Slack Configuration Token, refreshing if expired.
    */
   private async getConfigToken(): Promise<string> {
+    // Ensure DB tokens are loaded before proceeding
+    await this.tokensLoaded;
+
     // If we have cached tokens and they're still valid (with 5min buffer), use them
     if (this.cachedTokens && Date.now() < this.cachedTokens.expires_at - 5 * 60 * 1000) {
       return this.cachedTokens.access_token;
