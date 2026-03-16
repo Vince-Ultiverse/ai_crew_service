@@ -165,23 +165,40 @@ export class OrchestratorService implements OnModuleInit {
           );
         } catch (err: any) {
           this.logger.error(`Agent "${agent.name}" failed: ${err.message}`);
+          const errMsg = err.message || '';
+
+          // Unrecoverable errors — pause immediately, no retry
+          const fatal = /no response from openclaw|ECONNREFUSED|ENOTFOUND|timed out/i.test(errMsg);
+          if (fatal) {
+            await this.projectsService.setStatus(
+              projectId, 'paused',
+              `Agent "${agent.name}" is unreachable: ${errMsg}`,
+            );
+            await this.projectsService.saveMessage(
+              projectId, 'system',
+              `Agent "${agent.name}" is not responding. Please check if the agent is running, then resume.\nError: ${errMsg}`,
+            );
+            break;
+          }
+
+          // Retryable errors
           nextMember.consecutive_failures += 1;
           await this.memberRepo.save(nextMember);
 
           if (nextMember.consecutive_failures >= 3) {
             await this.projectsService.setStatus(
               projectId, 'paused',
-              `Agent "${agent.name}" failed 3 times: ${err.message}`,
+              `Agent "${agent.name}" failed 3 times: ${errMsg}`,
             );
             await this.projectsService.saveMessage(
               projectId, 'system',
-              `Agent "${agent.name}" failed 3 consecutive times. Project paused.\nError: ${err.message}`,
+              `Agent "${agent.name}" failed 3 consecutive times. Project paused.\nError: ${errMsg}`,
             );
             break;
           } else {
             await this.projectsService.saveMessage(
               projectId, 'system',
-              `Agent "${agent.name}" failed (attempt ${nextMember.consecutive_failures}/3): ${err.message}. Retrying...`,
+              `Agent "${agent.name}" failed (attempt ${nextMember.consecutive_failures}/3): ${errMsg}. Retrying...`,
             );
             // Continue loop immediately to retry
             continue;
