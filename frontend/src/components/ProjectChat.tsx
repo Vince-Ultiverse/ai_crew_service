@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { ProjectMessage } from '../types';
+import type { ProjectMessage, ProjectMember } from '../types';
 import { api } from '../api/client';
 import { useTheme } from '../theme';
 
@@ -8,9 +8,10 @@ const AGENT_COLORS = [
   '#c678dd', '#56b6c2', '#d19a66', '#be5046', '#4ec9b0',
 ];
 
-export default function ProjectChat({ projectId, projectStatus }: {
+export default function ProjectChat({ projectId, projectStatus, members }: {
   projectId: string;
   projectStatus: string;
+  members?: ProjectMember[];
 }) {
   const { theme } = useTheme();
   const { colors, pixelInput, pixelButtonSmall } = theme;
@@ -20,6 +21,11 @@ export default function ProjectChat({ projectId, projectStatus }: {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const agentColorMap = useRef<Map<string, string>>(new Map());
   const eventSourceRef = useRef<EventSource | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // @mention state
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,16 +60,13 @@ export default function ProjectChat({ projectId, projectStatus }: {
       try {
         const msg: ProjectMessage = JSON.parse(event.data);
         setMessages((prev) => {
-          // Avoid duplicates
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
       } catch {}
     };
 
-    es.onerror = () => {
-      // SSE will auto-reconnect
-    };
+    es.onerror = () => {};
 
     return () => {
       es.close();
@@ -71,10 +74,55 @@ export default function ProjectChat({ projectId, projectStatus }: {
     };
   }, [projectId]);
 
+  // Compute @mention candidates
+  const mentionCandidates = (() => {
+    if (mentionQuery === null || !members?.length) return [];
+    const q = mentionQuery.toLowerCase();
+    return members
+      .filter((m) => m.agent?.name?.toLowerCase().includes(q))
+      .slice(0, 6);
+  })();
+
+  const insertMention = (name: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const pos = ta.selectionStart;
+    const before = input.slice(0, pos);
+    // Find the @ that triggered this mention
+    const atIdx = before.lastIndexOf('@');
+    if (atIdx < 0) return;
+    const newInput = input.slice(0, atIdx) + `@${name} ` + input.slice(pos);
+    setInput(newInput);
+    setMentionQuery(null);
+    // Restore focus
+    setTimeout(() => {
+      ta.focus();
+      const cursor = atIdx + name.length + 2;
+      ta.setSelectionRange(cursor, cursor);
+    }, 0);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setInput(val);
+
+    // Detect @mention trigger
+    const pos = e.target.selectionStart;
+    const before = val.slice(0, pos);
+    const atMatch = before.match(/@(\w*)$/);
+    if (atMatch) {
+      setMentionQuery(atMatch[1]);
+      setMentionIndex(0);
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text) return;
     setInput('');
+    setMentionQuery(null);
     try {
       await api.sendProjectMessage(projectId, text);
     } catch (e: any) {
@@ -83,13 +131,36 @@ export default function ProjectChat({ projectId, projectStatus }: {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // @mention navigation
+    if (mentionQuery !== null && mentionCandidates.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex((i) => (i + 1) % mentionCandidates.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex((i) => (i - 1 + mentionCandidates.length) % mentionCandidates.length);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        insertMention(mentionCandidates[mentionIndex].agent?.name || '');
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionQuery(null);
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
-  // Find current speaking agent for thinking indicator
   const isRunning = projectStatus === 'running';
   const lastMsg = messages[messages.length - 1];
   const isThinking = isRunning && lastMsg && lastMsg.role !== 'system';
@@ -216,39 +287,88 @@ export default function ProjectChat({ projectId, projectStatus }: {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input area */}
       <div style={{
-        display: 'flex',
-        gap: 8,
-        padding: '8px 12px',
+        position: 'relative',
         background: colors.card,
         borderTop: `2px solid ${colors.border}`,
       }}>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Send a message to the team..."
-          rows={1}
-          style={{
-            ...pixelInput(),
-            flex: 1,
-            resize: 'none',
-            minHeight: 36,
-            maxHeight: 120,
-            padding: '8px 12px',
-          }}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!input.trim()}
-          style={{
-            ...pixelButtonSmall(colors.accent),
-            opacity: input.trim() ? 1 : 0.5,
-          }}
-        >
-          Send
-        </button>
+        {/* @mention dropdown */}
+        {mentionQuery !== null && mentionCandidates.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: 8,
+            right: 8,
+            background: colors.card,
+            border: `2px solid ${colors.borderDark}`,
+            boxShadow: `4px 4px 0px ${colors.borderDark}`,
+            maxHeight: 200,
+            overflow: 'auto',
+            zIndex: 10,
+          }}>
+            {mentionCandidates.map((m, i) => (
+              <div
+                key={m.id}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  insertMention(m.agent?.name || '');
+                }}
+                style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  background: i === mentionIndex ? colors.accent : 'transparent',
+                  color: i === mentionIndex ? '#fff' : colors.text,
+                  fontSize: 13,
+                  fontFamily: theme.fonts.mono,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  borderBottom: `1px solid ${colors.border}`,
+                }}
+              >
+                <span style={{ fontWeight: 700 }}>@{m.agent?.name}</span>
+                {m.agent?.role && (
+                  <span style={{
+                    fontSize: 10,
+                    color: i === mentionIndex ? 'rgba(255,255,255,0.7)' : colors.textLight,
+                  }}>
+                    {m.agent.role}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, padding: '8px 12px' }}>
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Send a message... (type @ to mention an agent)"
+            rows={1}
+            style={{
+              ...pixelInput(),
+              flex: 1,
+              resize: 'none',
+              minHeight: 36,
+              maxHeight: 120,
+              padding: '8px 12px',
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim()}
+            style={{
+              ...pixelButtonSmall(colors.accent),
+              opacity: input.trim() ? 1 : 0.5,
+            }}
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );

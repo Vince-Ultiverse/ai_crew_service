@@ -70,7 +70,7 @@ export default function ProjectDetail() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 48px)',
+      height: '100%',
       overflow: 'hidden',
     }}>
       {/* Header */}
@@ -164,7 +164,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Chat area */}
-        <ProjectChat projectId={project.id} projectStatus={project.status} />
+        <ProjectChat projectId={project.id} projectStatus={project.status} members={project.members} />
       </div>
     </div>
   );

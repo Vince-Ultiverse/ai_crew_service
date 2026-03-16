@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isSeverance = theme.name === 'severance';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Sidebar */}
       <nav style={{
         width: 220,
@@ -137,10 +137,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         flex: 1,
         position: 'relative',
         background: colors.background,
-        minHeight: '100vh',
+        overflow: 'hidden',
       }}>
         {isSeverance && <LumonOfficeBackground />}
-        <div style={{ position: 'relative', zIndex: 1, padding: 24 }}>
+        <div style={{ position: 'relative', zIndex: 1, padding: 24, height: '100%', boxSizing: 'border-box', overflow: 'auto' }}>
           {children}
         </div>
       </main>
