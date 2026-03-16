@@ -200,7 +200,7 @@ export default function SlackTab({ agentId }: { agentId: string }) {
           marginBottom: 20,
           border: `2px solid ${colors.border}`,
           padding: 12,
-          background: colors.bg,
+          background: colors.background,
         }}>
           <h3 style={{ fontSize: 12, color: colors.text, marginBottom: 8 }}>Channel Setup</h3>
           <div style={{ fontSize: 11, color: colors.textLight, lineHeight: 1.8 }}>
