@@ -213,7 +213,10 @@ export default function SlackTab({ agentId }: { agentId: string }) {
             <div>1. Click the channel name at the top to open channel settings</div>
             <div>2. Go to <strong>Integrations</strong> tab</div>
             <div>3. Click <strong>Add an App</strong> and select your bot</div>
-            <div style={{ marginTop: 10, padding: '8px 10px', background: colors.border, fontSize: 10, lineHeight: 1.6 }}>
+            <div style={{ marginTop: 12, padding: '8px 10px', background: '#fff8e1', border: `2px solid #b8860b`, fontSize: 10, lineHeight: 1.6 }}>
+              <strong>Important:</strong> After adding the bot to a channel, copy the Slack channel link and send it to the agent in the <strong>Chat</strong> tab. The agent needs to whitelist the channel before it can respond to messages there.
+            </div>
+            <div style={{ marginTop: 8, padding: '8px 10px', background: colors.border, fontSize: 10, lineHeight: 1.6 }}>
               <strong>Tip:</strong> The agent will respond to direct messages automatically. For channels, mention <code>@{profile?.name || 'YourBot'}</code> to get a response, or the agent will listen to all messages in channels it's been added to.
             </div>
           </div>

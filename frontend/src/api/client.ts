@@ -111,4 +111,17 @@ export const api = {
     request<ProjectMessage[]>(`/projects/${id}/messages?limit=${limit}`),
   sendProjectMessage: (id: string, content: string) =>
     request<ProjectMessage>(`/projects/${id}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+
+  // Project Slack
+  setupProjectSlack: (id: string, channelId?: string) =>
+    request<{ channelId: string; channelName: string }>(`/projects/${id}/slack/setup`, {
+      method: 'POST',
+      body: JSON.stringify(channelId ? { channel_id: channelId } : {}),
+    }),
+  disconnectProjectSlack: (id: string) =>
+    request<{ ok: boolean }>(`/projects/${id}/slack/disconnect`, { method: 'POST' }),
+  getProjectSlackStatus: (id: string) =>
+    request<{ connected: boolean; channelId: string | null; channelName: string | null; listening: boolean }>(
+      `/projects/${id}/slack/status`,
+    ),
 };

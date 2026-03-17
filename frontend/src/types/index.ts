@@ -74,6 +74,8 @@ export interface Project {
   current_agent_id: string | null;
   pause_reason: string | null;
   coordinator_agent_id: string | null;
+  slack_channel_id: string | null;
+  slack_channel_name: string | null;
   members: ProjectMember[];
   created_at: string;
   updated_at: string;
@@ -97,6 +99,7 @@ export interface ProjectMessage {
   agent_name: string | null;
   content: string;
   turn_number: number;
+  slack_ts: string | null;
   created_at: string;
 }
 
@@ -106,6 +109,7 @@ export interface CreateProjectPayload {
   max_turns?: number;
   agent_ids?: string[];
   coordinator_agent_id?: string;
+  slack_channel_id?: string;
 }
 
 export interface CreateAgentPayload {

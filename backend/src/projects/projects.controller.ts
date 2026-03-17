@@ -13,6 +13,7 @@ import {
 import { Observable, map } from 'rxjs';
 import { ProjectsService } from './projects.service';
 import { OrchestratorService } from './orchestrator.service';
+import { SlackProjectService } from './slack-project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -22,6 +23,7 @@ export class ProjectsController {
   constructor(
     private readonly projectsService: ProjectsService,
     private readonly orchestratorService: OrchestratorService,
+    private readonly slackProjectService: SlackProjectService,
   ) {}
 
   @Get()
@@ -47,6 +49,7 @@ export class ProjectsController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     this.orchestratorService.stopLoop(id);
+    this.slackProjectService.stopSocketListener(id);
     return this.projectsService.remove(id);
   }
 
@@ -99,6 +102,7 @@ export class ProjectsController {
   @Post(':id/complete')
   async complete(@Param('id') id: string) {
     this.orchestratorService.stopLoop(id);
+    this.slackProjectService.stopSocketListener(id);
     await this.projectsService.setStatus(id, 'completed');
     await this.projectsService.saveMessage(id, 'system', 'Project marked as completed by user.');
     return this.projectsService.findOne(id);
@@ -130,6 +134,30 @@ export class ProjectsController {
     }
 
     return msg;
+  }
+
+  // --- Slack integration endpoints ---
+
+  @Post(':id/slack/setup')
+  async slackSetup(
+    @Param('id') id: string,
+    @Body() body: { channel_id?: string },
+  ) {
+    await this.projectsService.findOne(id); // verify exists
+    return this.slackProjectService.setupChannel(id, body.channel_id);
+  }
+
+  @Post(':id/slack/disconnect')
+  async slackDisconnect(@Param('id') id: string) {
+    await this.projectsService.findOne(id);
+    await this.slackProjectService.disconnectChannel(id);
+    return { ok: true };
+  }
+
+  @Get(':id/slack/status')
+  async slackStatus(@Param('id') id: string) {
+    await this.projectsService.findOne(id);
+    return this.slackProjectService.getChannelStatus(id);
   }
 
   @Sse(':id/messages/stream')

@@ -35,6 +35,9 @@ export class ProjectMessage {
   @Column({ type: 'int', default: 0 })
   turn_number: number;
 
+  @Column({ length: 50, nullable: true })
+  slack_ts: string;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 }

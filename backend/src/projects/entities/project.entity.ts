@@ -38,6 +38,12 @@ export class Project {
   @Column({ nullable: true })
   coordinator_agent_id: string;
 
+  @Column({ length: 50, nullable: true })
+  slack_channel_id: string;
+
+  @Column({ length: 200, nullable: true })
+  slack_channel_name: string;
+
   @OneToMany(() => ProjectMember, (m) => m.project, { cascade: true })
   members: ProjectMember[];
 

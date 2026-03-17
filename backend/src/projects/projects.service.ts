@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
@@ -7,6 +7,7 @@ import { ProjectMessage } from './entities/project-message.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AgentsService } from '../agents/agents.service';
+import { SlackProjectService } from './slack-project.service';
 import { Subject } from 'rxjs';
 
 @Injectable()
@@ -24,6 +25,8 @@ export class ProjectsService {
     @InjectRepository(ProjectMessage)
     private messageRepo: Repository<ProjectMessage>,
     private agentsService: AgentsService,
+    @Inject(forwardRef(() => SlackProjectService))
+    private slackProjectService: SlackProjectService,
   ) {}
 
   async findAll(): Promise<Project[]> {
@@ -105,6 +108,7 @@ export class ProjectsService {
     agentId?: string,
     agentName?: string,
     turnNumber?: number,
+    slackTs?: string,
   ): Promise<ProjectMessage> {
     const msg = this.messageRepo.create({
       project_id: projectId,
@@ -113,11 +117,17 @@ export class ProjectsService {
       agent_id: agentId,
       agent_name: agentName,
       turn_number: turnNumber ?? 0,
+      slack_ts: slackTs,
     });
     const saved = await this.messageRepo.save(msg);
 
     // Push to SSE subject
     this.sseSubjects.get(projectId)?.next(saved);
+
+    // Fire-and-forget: post to Slack if linked
+    this.slackProjectService.postToSlackIfLinked(projectId, saved).catch((err) => {
+      this.logger.warn(`Slack post failed for project ${projectId}: ${err.message}`);
+    });
 
     return saved;
   }

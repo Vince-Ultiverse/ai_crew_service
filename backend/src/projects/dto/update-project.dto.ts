@@ -18,4 +18,8 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsUUID('4')
   coordinator_agent_id?: string;
+
+  @IsOptional()
+  @IsString()
+  slack_channel_id?: string;
 }

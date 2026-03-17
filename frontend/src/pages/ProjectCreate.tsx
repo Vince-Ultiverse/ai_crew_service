@@ -15,6 +15,8 @@ export default function ProjectCreate() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [coordinatorId, setCoordinatorId] = useState('');
+  const [connectSlack, setConnectSlack] = useState(false);
+  const [slackChannelId, setSlackChannelId] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -41,6 +43,16 @@ export default function ProjectCreate() {
         agent_ids: selectedIds,
         coordinator_agent_id: coordinatorId || undefined,
       });
+
+      // Set up Slack channel if requested
+      if (connectSlack) {
+        try {
+          await api.setupProjectSlack(project.id, slackChannelId.trim() || undefined);
+        } catch (slackErr: any) {
+          alert(`Project created, but Slack setup failed: ${slackErr.message}`);
+        }
+      }
+
       navigate(`/projects/${project.id}`);
     } catch (err: any) {
       alert(`Failed to create project: ${err.message}`);
@@ -164,6 +176,39 @@ export default function ProjectCreate() {
                 The coordinator decides which agent speaks next
               </div>
             </div>
+          )}
+
+          {/* Slack Integration */}
+          {selectedIds.length > 0 && (
+            <fieldset style={pixelFieldset()}>
+              <legend style={pixelLegend()}>Slack Integration</legend>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={connectSlack}
+                  onChange={(e) => setConnectSlack(e.target.checked)}
+                />
+                <span style={{ fontWeight: 700 }}>Connect to Slack channel</span>
+              </label>
+              {connectSlack && (
+                <div style={{ marginTop: 10, paddingLeft: 24 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.text }}>
+                    Channel ID (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={slackChannelId}
+                    onChange={(e) => setSlackChannelId(e.target.value)}
+                    placeholder="Leave empty to auto-create"
+                    style={{ ...pixelInput(), width: 280 }}
+                  />
+                  <div style={{ fontSize: 11, color: colors.textLight, marginTop: 4 }}>
+                    Enter an existing channel ID (e.g., C01ABC23DEF) or leave empty to create a new one.
+                    Agents must have Slack connected.
+                  </div>
+                </div>
+              )}
+            </fieldset>
           )}
 
           {/* Submit */}

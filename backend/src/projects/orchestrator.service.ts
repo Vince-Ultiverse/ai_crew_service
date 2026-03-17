@@ -1,8 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectsService } from './projects.service';
 import { AgentsService } from '../agents/agents.service';
+import { SlackProjectService } from './slack-project.service';
 import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
 
@@ -19,15 +20,18 @@ export class OrchestratorService implements OnModuleInit {
   private running = new Map<string, boolean>();
 
   constructor(
+    @Inject(forwardRef(() => ProjectsService))
     private projectsService: ProjectsService,
     private agentsService: AgentsService,
+    @Inject(forwardRef(() => SlackProjectService))
+    private slackProjectService: SlackProjectService,
     @InjectRepository(ProjectMember)
     private memberRepo: Repository<ProjectMember>,
     @InjectRepository(Project)
     private projectRepo: Repository<Project>,
   ) {}
 
-  /** On server restart, reset any projects stuck in 'running' state */
+  /** On server restart, reset any projects stuck in 'running' state + restore Socket listeners */
   async onModuleInit(): Promise<void> {
     const stuck = await this.projectRepo.find({ where: { status: 'running' } });
     for (const project of stuck) {
@@ -35,6 +39,17 @@ export class OrchestratorService implements OnModuleInit {
       project.pause_reason = 'Server restarted';
       await this.projectRepo.save(project);
       this.logger.warn(`Project "${project.name}" reset to paused after server restart`);
+    }
+
+    // Restore Socket Mode listeners for active projects with Slack channels
+    const activeProjects = await this.projectRepo
+      .createQueryBuilder('p')
+      .where('p.slack_channel_id IS NOT NULL')
+      .andWhere('p.status IN (:...statuses)', { statuses: ['running', 'paused'] })
+      .getMany();
+
+    for (const project of activeProjects) {
+      this.startSlackListener(project.id);
     }
   }
 
@@ -44,6 +59,10 @@ export class OrchestratorService implements OnModuleInit {
       return;
     }
     this.running.set(projectId, true);
+
+    // Start Slack Socket listener if channel is linked
+    this.startSlackListener(projectId);
+
     this.runLoop(projectId).catch((err) => {
       this.logger.error(`Orchestrator loop crashed for ${projectId}: ${err.message}`, err.stack);
       this.running.delete(projectId);
@@ -52,6 +71,36 @@ export class OrchestratorService implements OnModuleInit {
 
   stopLoop(projectId: string): void {
     this.running.delete(projectId);
+    this.slackProjectService.stopSocketListener(projectId);
+  }
+
+  /** Start Slack Socket Mode listener with auto-resume callback */
+  private startSlackListener(projectId: string): void {
+    this.slackProjectService.startSocketListener(
+      projectId,
+      async (text, slackTs, userName) => {
+        try {
+          await this.projectsService.saveMessage(
+            projectId, 'user', `[${userName}] ${text}`,
+            undefined, undefined, undefined, slackTs,
+          );
+
+          // Auto-resume if paused
+          const project = await this.projectRepo.findOne({ where: { id: projectId } });
+          if (project?.status === 'paused') {
+            await this.projectsService.setStatus(projectId, 'running');
+            await this.projectsService.saveMessage(
+              projectId, 'system', `${userName} replied via Slack. Resuming...`,
+            );
+            this.startLoop(projectId);
+          }
+        } catch (err: any) {
+          this.logger.error(`Failed to process Slack message for project ${projectId}: ${err.message}`);
+        }
+      },
+    ).catch((err) => {
+      this.logger.warn(`Failed to start Slack listener for project ${projectId}: ${err.message}`);
+    });
   }
 
   isRunning(projectId: string): boolean {

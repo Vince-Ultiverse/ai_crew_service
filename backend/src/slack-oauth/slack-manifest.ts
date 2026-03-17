@@ -21,6 +21,8 @@ export function buildSlackManifest(
         bot: [
           'app_mentions:read',
           'channels:history',
+          'channels:join',
+          'channels:manage',
           'channels:read',
           'chat:write',
           'groups:history',
@@ -38,7 +40,7 @@ export function buildSlackManifest(
     },
     settings: {
       event_subscriptions: {
-        bot_events: ['app_mention', 'message.im'],
+        bot_events: ['app_mention', 'message.channels', 'message.im'],
       },
       interactivity: {
         is_enabled: false,
