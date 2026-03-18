@@ -4,6 +4,7 @@ import type { Project } from '../types';
 import { api } from '../api/client';
 import ProjectChat from '../components/ProjectChat';
 import ProjectMemberList from '../components/ProjectMemberList';
+import ProjectTaskPanel from '../components/ProjectTaskPanel';
 import { useTheme } from '../theme';
 
 export default function ProjectDetail() {
@@ -264,6 +265,13 @@ export default function ProjectDetail() {
           overflow: 'auto',
         }}>
           <ProjectMemberList project={project} onUpdate={load} />
+          <div style={{
+            borderTop: `2px solid ${colors.borderDark}`,
+            marginTop: 12,
+            paddingTop: 12,
+          }}>
+            <ProjectTaskPanel projectId={project.id} members={project.members || []} />
+          </div>
         </div>
 
         {/* Chat area */}

@@ -4,13 +4,16 @@ import { Repository } from 'typeorm';
 import { ProjectsService } from './projects.service';
 import { AgentsService } from '../agents/agents.service';
 import { SlackProjectService } from './slack-project.service';
+import { TaskService } from './task.service';
 import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
+import { ProjectTask } from './entities/project-task.entity';
 
 const MAX_CONTEXT_MESSAGES = 30;
 const MAX_CONSECUTIVE_SAME_AGENT = 5;
 const TURN_DELAY_MS = 2000;
 const AGENT_CALL_TIMEOUT_MS = 120_000;
+const VALID_TASK_STATUSES = ['not_started', 'in_progress', 'completed', 'cancelled'];
 
 @Injectable()
 export class OrchestratorService implements OnModuleInit {
@@ -25,6 +28,7 @@ export class OrchestratorService implements OnModuleInit {
     private agentsService: AgentsService,
     @Inject(forwardRef(() => SlackProjectService))
     private slackProjectService: SlackProjectService,
+    private taskService: TaskService,
     @InjectRepository(ProjectMember)
     private memberRepo: Repository<ProjectMember>,
     @InjectRepository(Project)
@@ -198,20 +202,42 @@ export class OrchestratorService implements OnModuleInit {
           break;
         }
 
+        // Fetch tasks for prompt context
+        const tasks = await this.taskService.findAllByProject(projectId);
+
         // Build prompt and call agent
-        const chatMessages = this.buildPrompt(project, members, messages, agent.id, agent.name);
+        const chatMessages = this.buildPrompt(project, members, messages, agent.id, agent.name, tasks);
 
         try {
           const reply = await this.callAgent(agent, chatMessages);
+
+          // Parse and execute task commands from agent reply
+          const taskCommands = this.parseTaskCommands(reply);
+          const taskSummaries = await this.executeTaskCommands(
+            projectId, agent.id, agent.name, taskCommands, members,
+          );
+
+          // Strip task commands from saved message
+          const cleanReply = taskCommands.length > 0
+            ? reply.replace(/\[TASK_(CREATE|UPDATE|COMPLETE|CANCEL|DELETE)\s*[^\]]*\]/gi, '').trim() || reply
+            : reply;
 
           // Success: reset failures and persist
           nextMember.consecutive_failures = 0;
           await this.memberRepo.save(nextMember);
           await this.projectsService.incrementTurn(projectId, agent.id);
           await this.projectsService.saveMessage(
-            projectId, 'assistant', reply,
+            projectId, 'assistant', cleanReply,
             agent.id, agent.name, project.current_turn + 1,
           );
+
+          // Post task change summaries as system messages
+          if (taskSummaries.length > 0) {
+            await this.projectsService.saveMessage(
+              projectId, 'system',
+              taskSummaries.join('\n'),
+            );
+          }
         } catch (err: any) {
           this.logger.error(`Agent "${agent.name}" failed: ${err.message}`);
           const errMsg = err.message || '';
@@ -305,15 +331,41 @@ export class OrchestratorService implements OnModuleInit {
     messages: { role: string; agent_id?: string; agent_name?: string; content: string }[],
     currentAgentId: string,
     currentAgentName: string,
+    tasks: ProjectTask[] = [],
   ): { role: string; content: string }[] {
     const memberList = members
       .map((m) => `- ${m.agent?.name} (${m.agent?.role || 'team member'})`)
       .join('\n');
 
+    // Format tasks for context
+    let taskSection = '';
+    if (tasks.length > 0) {
+      const taskLines = tasks.map((t) => {
+        const assignee = t.assignee_agent?.name ? ` (@${t.assignee_agent.name})` : '';
+        return `  #${t.task_number} [${t.status}] "${t.title}"${assignee}`;
+      }).join('\n');
+      taskSection = `\n\nCurrent Tasks:\n${taskLines}`;
+    }
+
+    const taskInstructions = [
+      `\n\nTask Management:`,
+      `You can manage project tasks using these commands in your messages:`,
+      `  [TASK_CREATE title="Task title" assignee="@Name" description="Details"]`,
+      `  [TASK_UPDATE #N status="in_progress"]`,
+      `  [TASK_UPDATE #N title="New title" description="Updated" assignee="@Name"]`,
+      `  [TASK_COMPLETE #N]`,
+      `  [TASK_CANCEL #N]`,
+      `  [TASK_DELETE #N]`,
+      `- assignee and description are optional in TASK_CREATE`,
+      `- Use task commands to track progress on work items`,
+    ].join('\n');
+
     const systemPrompt = [
       `You are ${currentAgentName}, participating in a team project called "${project.name}".`,
       project.goal ? `\nProject Goal: ${project.goal}` : '',
       `\nTeam Members:\n${memberList}`,
+      taskSection,
+      taskInstructions,
       `\nInstructions:`,
       `- Collaborate with your team to achieve the project goal.`,
       `- Use @Name to direct a message to a specific team member.`,
@@ -345,6 +397,112 @@ export class OrchestratorService implements OnModuleInit {
     }
 
     return chatMessages;
+  }
+
+  private parseTaskCommands(content: string): { type: string; taskNumber?: number; params: Record<string, string>; raw: string }[] {
+    const commands: { type: string; taskNumber?: number; params: Record<string, string>; raw: string }[] = [];
+
+    // Match [TASK_CREATE ...], [TASK_UPDATE #N ...], [TASK_COMPLETE #N], [TASK_CANCEL #N], [TASK_DELETE #N]
+    const regex = /\[TASK_(CREATE|UPDATE|COMPLETE|CANCEL|DELETE)\s*([^\]]*)\]/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(content)) !== null) {
+      const type = match[1].toUpperCase();
+      const body = match[2].trim();
+      const raw = match[0];
+
+      // Extract #N task number
+      const numMatch = body.match(/#(\d+)/);
+      const taskNumber = numMatch ? parseInt(numMatch[1], 10) : undefined;
+
+      // Extract key="value" params
+      const params: Record<string, string> = {};
+      const paramRegex = /(\w+)="([^"]*)"/g;
+      let pm: RegExpExecArray | null;
+      while ((pm = paramRegex.exec(body)) !== null) {
+        params[pm[1].toLowerCase()] = pm[2];
+      }
+
+      commands.push({ type, taskNumber, params, raw });
+    }
+
+    return commands;
+  }
+
+  private async executeTaskCommands(
+    projectId: string,
+    agentId: string,
+    agentName: string,
+    commands: { type: string; taskNumber?: number; params: Record<string, string>; raw: string }[],
+    members: ProjectMember[],
+  ): Promise<string[]> {
+    const summaries: string[] = [];
+
+    for (const cmd of commands) {
+      try {
+        // Resolve @Name to agent ID
+        let assigneeId: string | undefined;
+        if (cmd.params.assignee) {
+          const name = cmd.params.assignee.replace(/^@/, '');
+          const member = members.find(
+            (m) => m.agent?.name?.toLowerCase() === name.toLowerCase(),
+          );
+          if (member) assigneeId = member.agent_id;
+        }
+
+        switch (cmd.type) {
+          case 'CREATE': {
+            const task = await this.taskService.create(
+              projectId,
+              {
+                title: (cmd.params.title || 'Untitled task').slice(0, 500),
+                description: cmd.params.description,
+                assignee_agent_id: assigneeId,
+              },
+              agentId,
+            );
+            const assigneeStr = task.assignee_agent?.name ? ` (@${task.assignee_agent.name})` : '';
+            summaries.push(`Task #${task.task_number} created: "${task.title}"${assigneeStr} — by ${agentName}`);
+            break;
+          }
+          case 'UPDATE': {
+            if (!cmd.taskNumber) break;
+            const dto: Record<string, string> = {};
+            if (cmd.params.title) dto.title = cmd.params.title.slice(0, 500);
+            if (cmd.params.description) dto.description = cmd.params.description;
+            if (cmd.params.status && VALID_TASK_STATUSES.includes(cmd.params.status)) {
+              dto.status = cmd.params.status;
+            }
+            if (assigneeId) dto.assignee_agent_id = assigneeId;
+            const task = await this.taskService.updateByNumber(projectId, cmd.taskNumber, dto);
+            summaries.push(`Task #${cmd.taskNumber} updated: "${task.title}" [${task.status}] — by ${agentName}`);
+            break;
+          }
+          case 'COMPLETE': {
+            if (!cmd.taskNumber) break;
+            const task = await this.taskService.updateByNumber(projectId, cmd.taskNumber, { status: 'completed' });
+            summaries.push(`Task #${cmd.taskNumber} completed: "${task.title}" — by ${agentName}`);
+            break;
+          }
+          case 'CANCEL': {
+            if (!cmd.taskNumber) break;
+            const task = await this.taskService.updateByNumber(projectId, cmd.taskNumber, { status: 'cancelled' });
+            summaries.push(`Task #${cmd.taskNumber} cancelled: "${task.title}" — by ${agentName}`);
+            break;
+          }
+          case 'DELETE': {
+            if (!cmd.taskNumber) break;
+            const task = await this.taskService.removeByNumber(projectId, cmd.taskNumber);
+            summaries.push(`Task #${cmd.taskNumber} deleted: "${task.title}" — by ${agentName}`);
+            break;
+          }
+        }
+      } catch (err: any) {
+        this.logger.warn(`Task command failed: ${cmd.raw} — ${err.message}`);
+      }
+    }
+
+    return summaries;
   }
 
   private async callAgent(

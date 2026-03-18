@@ -1,4 +1,4 @@
-import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage, Project, ProjectMessage, CreateProjectPayload } from '../types';
+import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage, Project, ProjectMessage, CreateProjectPayload, ProjectTask, CreateTaskPayload, UpdateTaskPayload } from '../types';
 
 const BASE = '/api';
 
@@ -111,6 +111,16 @@ export const api = {
     request<ProjectMessage[]>(`/projects/${id}/messages?limit=${limit}`),
   sendProjectMessage: (id: string, content: string) =>
     request<ProjectMessage>(`/projects/${id}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+
+  // Project Tasks
+  getProjectTasks: (id: string) =>
+    request<ProjectTask[]>(`/projects/${id}/tasks`),
+  createProjectTask: (id: string, data: CreateTaskPayload) =>
+    request<ProjectTask>(`/projects/${id}/tasks`, { method: 'POST', body: JSON.stringify(data) }),
+  updateProjectTask: (id: string, taskId: string, data: UpdateTaskPayload) =>
+    request<ProjectTask>(`/projects/${id}/tasks/${taskId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProjectTask: (id: string, taskId: string) =>
+    request<void>(`/projects/${id}/tasks/${taskId}`, { method: 'DELETE' }),
 
   // Project Slack
   setupProjectSlack: (id: string, channelId?: string) =>

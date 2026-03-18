@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ProjectMember } from './project-member.entity';
 import { ProjectMessage } from './project-message.entity';
+import { ProjectTask } from './project-task.entity';
 
 @Entity('projects')
 export class Project {
@@ -49,6 +50,9 @@ export class Project {
 
   @OneToMany(() => ProjectMessage, (m) => m.project, { cascade: true })
   messages: ProjectMessage[];
+
+  @OneToMany(() => ProjectTask, (t) => t.project, { cascade: true })
+  tasks: ProjectTask[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;

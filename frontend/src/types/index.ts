@@ -103,6 +103,37 @@ export interface ProjectMessage {
   created_at: string;
 }
 
+export type TaskStatus = 'not_started' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface ProjectTask {
+  id: string;
+  project_id: string;
+  task_number: number;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  assignee_agent_id: string | null;
+  assignee_agent: Agent | null;
+  created_by_agent_id: string | null;
+  created_by_agent: Agent | null;
+  created_by_user: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskPayload {
+  title: string;
+  description?: string;
+  assignee_agent_id?: string;
+}
+
+export interface UpdateTaskPayload {
+  title?: string;
+  description?: string;
+  status?: TaskStatus;
+  assignee_agent_id?: string;
+}
+
 export interface CreateProjectPayload {
   name: string;
   goal?: string;

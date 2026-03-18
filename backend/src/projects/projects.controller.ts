@@ -14,9 +14,12 @@ import { Observable, map } from 'rxjs';
 import { ProjectsService } from './projects.service';
 import { OrchestratorService } from './orchestrator.service';
 import { SlackProjectService } from './slack-project.service';
+import { TaskService } from './task.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Controller('projects')
 export class ProjectsController {
@@ -24,6 +27,7 @@ export class ProjectsController {
     private readonly projectsService: ProjectsService,
     private readonly orchestratorService: OrchestratorService,
     private readonly slackProjectService: SlackProjectService,
+    private readonly taskService: TaskService,
   ) {}
 
   @Get()
@@ -134,6 +138,42 @@ export class ProjectsController {
     }
 
     return msg;
+  }
+
+  // --- Task endpoints ---
+
+  @Get(':id/tasks')
+  getTasks(@Param('id') id: string) {
+    return this.taskService.findAllByProject(id);
+  }
+
+  @Post(':id/tasks')
+  createTask(@Param('id') id: string, @Body() dto: CreateTaskDto) {
+    return this.taskService.create(id, dto, undefined, true);
+  }
+
+  @Put(':id/tasks/:taskId')
+  updateTask(
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
+    return this.taskService.update(id, taskId, dto);
+  }
+
+  @Delete(':id/tasks/:taskId')
+  deleteTask(@Param('id') id: string, @Param('taskId') taskId: string) {
+    return this.taskService.remove(id, taskId);
+  }
+
+  @Sse(':id/tasks/stream')
+  taskStream(@Param('id') id: string): Observable<MessageEvent> {
+    const subject = this.taskService.getSubject(id);
+    return subject.pipe(
+      map((evt) => ({
+        data: JSON.stringify(evt),
+      } as MessageEvent)),
+    );
   }
 
   // --- Slack integration endpoints ---
