@@ -195,6 +195,22 @@ export class DockerService {
     tools_prompt: 'TOOLS.md',
   };
 
+  /**
+   * Read the current openclaw.json for a given agent slug.
+   * Used to snapshot runtime config before cleanupAgentDirectory.
+   */
+  readExistingConfig(slug: string): Record<string, any> | null {
+    const configPath = path.join(DATA_DIR, slug, 'config', 'openclaw.json');
+    try {
+      if (fs.existsSync(configPath)) {
+        return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      }
+    } catch {
+      // Corrupt — ignore
+    }
+    return null;
+  }
+
   async prepareAgentDirectory(
     slug: string,
     config: Record<string, any>,
@@ -211,7 +227,19 @@ export class DockerService {
     fs.chmodSync(workspaceDir, 0o777);
 
     const configPath = path.join(configDir, 'openclaw.json');
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+    // Merge with on-disk config to preserve any OpenClaw runtime fields
+    // that haven't been synced to DB yet (e.g. first deploy).
+    let existing: Record<string, any> = {};
+    try {
+      if (fs.existsSync(configPath)) {
+        existing = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      }
+    } catch {
+      // Corrupt or missing — start fresh
+    }
+    const merged = this.deepMerge(existing, config);
+    fs.writeFileSync(configPath, JSON.stringify(merged, null, 2));
 
     // Write workspace files (IDENTITY.md, SOUL.md, AGENTS.md, USER.md, TOOLS.md)
     // Replace {{name}} placeholder with actual agent name
@@ -390,5 +418,28 @@ export class DockerService {
     const value = parseInt(match[1], 10);
     const unit = match[2].toLowerCase();
     return unit === 'g' ? value * 1024 * 1024 * 1024 : value * 1024 * 1024;
+  }
+
+  /**
+   * Deep merge: `overrides` values win over `base`, but nested objects
+   * are merged recursively so runtime-only keys in `base` are preserved.
+   * Arrays are replaced, not concatenated.
+   */
+  private deepMerge(base: Record<string, any>, overrides: Record<string, any>): Record<string, any> {
+    const result = { ...base };
+    for (const key of Object.keys(overrides)) {
+      const ov = overrides[key];
+      const bv = result[key];
+      if (
+        ov && bv &&
+        typeof ov === 'object' && typeof bv === 'object' &&
+        !Array.isArray(ov) && !Array.isArray(bv)
+      ) {
+        result[key] = this.deepMerge(bv, ov);
+      } else {
+        result[key] = ov;
+      }
+    }
+    return result;
   }
 }

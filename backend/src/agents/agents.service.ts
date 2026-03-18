@@ -148,6 +148,8 @@ export class AgentsService {
     const agent = await this.findOne(id);
     if (!agent.container_id) throw new NotFoundException('Agent has no container');
 
+    // Sync runtime config back to DB before stopping
+    await this.syncRuntimeConfig(agent);
     await this.dockerService.stopContainer(agent.container_id);
     agent.status = 'stopped';
     await this.agentRepo.save(agent);
@@ -161,6 +163,9 @@ export class AgentsService {
     if (!agent.container_id) {
       return this.recreateContainer(agent);
     }
+
+    // Sync runtime config to DB so it survives regeneration
+    await this.syncRuntimeConfig(agent);
 
     // Regenerate config before restart so any config changes take effect
     const config = this.dockerService.generateOpenClawConfig(agent);
@@ -176,6 +181,9 @@ export class AgentsService {
   async rebuild(id: string): Promise<Agent> {
     const agent = await this.findOne(id);
 
+    // Sync runtime config to DB before destroying anything
+    await this.syncRuntimeConfig(agent);
+
     // Remove old container if exists
     if (agent.container_id) {
       try {
@@ -186,7 +194,7 @@ export class AgentsService {
       agent.container_id = null as any;
     }
 
-    // Clean old data and recreate
+    // Clean old data and recreate (runtime config is now in DB, so generateOpenClawConfig picks it up)
     await this.dockerService.cleanupAgentDirectory(agent.slug);
     const config = this.dockerService.generateOpenClawConfig(agent);
     if (config.gateway?.auth?.token) {
@@ -302,6 +310,45 @@ export class AgentsService {
     await this.agentRepo.save(agent);
     await this.addLog(agent.id, 'info', `Container recreated and started: ${containerId.substring(0, 12)}`);
     return agent;
+  }
+
+  /**
+   * Sync OpenClaw runtime config back to DB.
+   * Reads the current openclaw.json and stores non-backend-managed fields
+   * into agent.openclaw_config so they survive restart/rebuild.
+   */
+  private async syncRuntimeConfig(agent: Agent): Promise<void> {
+    const onDisk = this.dockerService.readExistingConfig(agent.slug);
+    if (!onDisk) return;
+
+    // Keys that our backend generates — don't sync these back
+    const backendManagedKeys = new Set(['agents', 'env', 'gateway', 'skills']);
+    // channels.slack core auth is backend-managed, but sub-keys like
+    // channels.slack.channels, channels.slack.streaming etc. are runtime.
+    // We handle channels specially below.
+
+    const runtime: Record<string, any> = { ...(agent.openclaw_config || {}) };
+
+    for (const [key, value] of Object.entries(onDisk)) {
+      if (backendManagedKeys.has(key)) continue;
+      if (key === 'channels') {
+        // Preserve runtime channel sub-config (channel allow-lists, streaming, etc.)
+        // but skip the core auth tokens we manage (enabled, botToken, appToken)
+        const slackOnDisk = value?.slack;
+        if (slackOnDisk) {
+          runtime.channels = runtime.channels || {};
+          runtime.channels.slack = runtime.channels.slack || {};
+          const { enabled, botToken, appToken, ...runtimeSlack } = slackOnDisk;
+          Object.assign(runtime.channels.slack, runtimeSlack);
+        }
+        continue;
+      }
+      // Everything else (meta, messages, commands, etc.) → store to DB
+      runtime[key] = value;
+    }
+
+    agent.openclaw_config = runtime;
+    await this.agentRepo.save(agent);
   }
 
   private extractWorkspaceFiles(agent: Agent): Record<string, string | null> {
