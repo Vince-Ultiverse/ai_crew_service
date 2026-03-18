@@ -77,15 +77,13 @@ export class DockerService {
     const providerAliases: Record<string, string> = { zai: 'z.ai' };
     const provider = (agent.llm_provider && providerAliases[agent.llm_provider]) || agent.llm_provider || 'anthropic';
 
-    // Model config in openclaw.json (anthropic provider triggers ANTHROPIC_MODEL_ALIASES bug, skip it)
+    // Model config in openclaw.json
     if (provider || agent.llm_model) {
       const defaultModel = provider === 'z.ai' ? 'glm-5' : 'claude-sonnet-4-5';
       const model = (agent.llm_model || defaultModel).replace(/-\d{8}$/, '');
-      if (provider !== 'anthropic') {
-        config.agents = config.agents || {};
-        config.agents.defaults = config.agents.defaults || {};
-        config.agents.defaults.model = { primary: `${provider}/${model}` };
-      }
+      config.agents = config.agents || {};
+      config.agents.defaults = config.agents.defaults || {};
+      config.agents.defaults.model = { primary: `${provider}/${model}` };
     }
 
     // API keys via env section (inline env vars)
