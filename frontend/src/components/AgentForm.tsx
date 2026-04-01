@@ -277,6 +277,7 @@ export default function AgentForm({
               <option value="0.5">0.5</option>
               <option value="1">1.0</option>
               <option value="2">2.0</option>
+              <option value="4">4.0</option>
             </select>
           </div>
         </div>
