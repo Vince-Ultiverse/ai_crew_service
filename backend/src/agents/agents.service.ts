@@ -272,25 +272,29 @@ export class AgentsService {
     };
   }
 
-  async getChatHistory(agentId: string, limit = 100): Promise<ChatMessage[]> {
+  async getChatHistory(agentId: string, limit = 100, sessionId?: string): Promise<ChatMessage[]> {
     await this.findOne(agentId); // verify agent exists
+    const where: any = { agent_id: agentId };
+    if (sessionId) where.session_id = sessionId;
     return this.chatRepo.find({
-      where: { agent_id: agentId },
+      where,
       order: { created_at: 'ASC' },
       take: limit,
     });
   }
 
-  async saveChatMessages(agentId: string, messages: { role: string; content: string }[]): Promise<void> {
+  async saveChatMessages(agentId: string, messages: { role: string; content: string }[], sessionId?: string): Promise<void> {
     const entities = messages.map((m) =>
-      this.chatRepo.create({ agent_id: agentId, role: m.role, content: m.content }),
+      this.chatRepo.create({ agent_id: agentId, role: m.role, content: m.content, ...(sessionId ? { session_id: sessionId } : {}) }),
     );
     await this.chatRepo.save(entities);
   }
 
-  async clearChatHistory(agentId: string): Promise<void> {
+  async clearChatHistory(agentId: string, sessionId?: string): Promise<void> {
     await this.findOne(agentId);
-    await this.chatRepo.delete({ agent_id: agentId });
+    const where: any = { agent_id: agentId };
+    if (sessionId) where.session_id = sessionId;
+    await this.chatRepo.delete(where);
   }
 
   private async recreateContainer(agent: Agent): Promise<Agent> {

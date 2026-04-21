@@ -15,6 +15,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return text ? JSON.parse(text) : (undefined as unknown as T);
 }
 
+async function requestWithSession<T>(path: string, sessionId: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-session-id': sessionId, ...options?.headers },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || res.statusText);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : (undefined as unknown as T);
+}
+
 async function requestText(path: string): Promise<string> {
   const res = await fetch(`${BASE}${path}`);
   if (!res.ok) {
@@ -56,6 +69,12 @@ export const api = {
     request<ChatMessage[]>(`/agents/${agentId}/chat/history?limit=${limit}`),
   clearChatHistory: (agentId: string) =>
     request<void>(`/agents/${agentId}/chat/history`, { method: 'DELETE' }),
+
+  // Session-aware chat history (for character personas)
+  getSessionChatHistory: (agentId: string, sessionId: string, limit = 100) =>
+    requestWithSession<ChatMessage[]>(`/agents/${agentId}/chat/history?limit=${limit}`, sessionId),
+  clearSessionChatHistory: (agentId: string, sessionId: string) =>
+    requestWithSession<void>(`/agents/${agentId}/chat/history`, sessionId, { method: 'DELETE' }),
 
   // Slack OAuth
   getSlackInstallUrl: (agentId: string) =>

@@ -20,6 +20,9 @@ export class ChatMessage {
   @Column()
   agent_id: string;
 
+  @Column({ length: 100, nullable: true })
+  session_id: string;
+
   @Column({ length: 20 })
   role: string;
 

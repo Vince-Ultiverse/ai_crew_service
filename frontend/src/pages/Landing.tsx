@@ -201,17 +201,6 @@ export default function Landing() {
           >
             Features
           </a>
-          <button
-            onClick={() => navigate('/admin')}
-            className="landing-nav-link"
-            style={{
-              background: 'none', border: `1px solid ${C.border}`,
-              color: C.textDim, fontFamily: FONT.mono, fontSize: 12,
-              padding: '6px 14px', cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s',
-            }}
-          >
-            Console
-          </button>
         </div>
       </nav>
 
@@ -529,18 +518,6 @@ export default function Landing() {
           fontFamily: FONT.mono, fontSize: 12, color: C.textMuted,
         }}>
           MindOS &mdash; distilled minds, real conversations
-        </div>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <a
-            onClick={() => navigate('/admin')}
-            className="landing-nav-link"
-            style={{
-              fontFamily: FONT.mono, fontSize: 12, color: C.textMuted,
-              textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s',
-            }}
-          >
-            Admin Console
-          </a>
         </div>
       </footer>
     </div>

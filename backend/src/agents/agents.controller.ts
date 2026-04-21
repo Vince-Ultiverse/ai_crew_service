@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Res,
+  Headers,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -79,13 +80,17 @@ export class AgentsController {
   getChatHistory(
     @Param('id') id: string,
     @Query('limit') limit?: string,
+    @Headers('x-session-id') sessionId?: string,
   ) {
-    return this.agentsService.getChatHistory(id, limit ? parseInt(limit, 10) : 100);
+    return this.agentsService.getChatHistory(id, limit ? parseInt(limit, 10) : 100, sessionId);
   }
 
   @Delete(':id/chat/history')
-  clearChatHistory(@Param('id') id: string) {
-    return this.agentsService.clearChatHistory(id);
+  clearChatHistory(
+    @Param('id') id: string,
+    @Headers('x-session-id') sessionId?: string,
+  ) {
+    return this.agentsService.clearChatHistory(id, sessionId);
   }
 
   @Post(':id/chat')
@@ -93,6 +98,7 @@ export class AgentsController {
     @Param('id') id: string,
     @Body() body: any,
     @Res() res: Response,
+    @Headers('x-session-id') sessionId?: string,
   ) {
     const agent = await this.agentsService.findOne(id);
     if (!agent.gateway_port) {
@@ -102,7 +108,7 @@ export class AgentsController {
     // Save user message to history
     const userMsg = body.messages?.[body.messages.length - 1];
     if (userMsg?.role === 'user') {
-      await this.agentsService.saveChatMessages(id, [userMsg]);
+      await this.agentsService.saveChatMessages(id, [userMsg], sessionId);
     }
 
     // Use Docker container name on the shared network (localhost won't work across containers)
@@ -140,7 +146,7 @@ export class AgentsController {
             if (fullContent) {
               await this.agentsService.saveChatMessages(id, [
                 { role: 'assistant', content: fullContent },
-              ]);
+              ], sessionId);
             }
             res.end();
             return;
@@ -169,7 +175,7 @@ export class AgentsController {
       if (content) {
         await this.agentsService.saveChatMessages(id, [
           { role: 'assistant', content },
-        ]);
+        ], sessionId);
       }
       res.json(data);
     }

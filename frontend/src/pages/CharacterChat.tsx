@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../api/client';
+import { getSessionId } from '../utils/session';
 import type { Agent } from '../types';
 
 // ─── Shared dark theme tokens ───────────────────────────────────
@@ -97,7 +98,7 @@ export default function CharacterChat() {
   useEffect(() => {
     if (!agent || agent.status !== 'running') return;
     setLoadingHistory(true);
-    api.getChatHistory(agent.id)
+    api.getSessionChatHistory(agent.id, getSessionId())
       .then((history) => {
         setMessages(history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })));
       })
@@ -123,7 +124,7 @@ export default function CharacterChat() {
     try {
       const res = await fetch(`/api/agents/${agent.id}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-session-id': getSessionId() },
         body: JSON.stringify({
           messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
           stream: true,
@@ -201,7 +202,7 @@ export default function CharacterChat() {
   const clearHistory = async () => {
     if (!agent || !confirm('Clear all chat history?')) return;
     try {
-      await api.clearChatHistory(agent.id);
+      await api.clearSessionChatHistory(agent.id, getSessionId());
       setMessages([]);
     } catch { /* ignore */ }
   };

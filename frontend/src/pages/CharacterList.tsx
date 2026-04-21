@@ -100,17 +100,6 @@ export default function CharacterList() {
           <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 16, color: C.accent }}>&gt;_</span>
           <span style={{ fontFamily: FONT.mono, fontWeight: 600, fontSize: 14, color: C.text }}>MindOS</span>
         </Link>
-        <button
-          onClick={() => navigate('/admin')}
-          className="char-nav-link"
-          style={{
-            background: 'none', border: `1px solid ${C.border}`,
-            color: C.textDim, fontFamily: FONT.mono, fontSize: 12,
-            padding: '6px 14px', cursor: 'pointer', transition: 'color 0.2s',
-          }}
-        >
-          Console
-        </button>
       </nav>
 
       {/* Header */}
