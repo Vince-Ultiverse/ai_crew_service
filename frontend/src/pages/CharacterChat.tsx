@@ -25,19 +25,19 @@ const FONT = {
 };
 
 const AVATARS: Record<string, string> = {
-  'steve-jobs': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg/220px-Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg',
-  'elon-musk': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg/220px-Elon_Musk_Royal_Society_%28crop2%29.jpg',
-  'charlie-munger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Charlie_Munger_%28cropped%29.jpg/220px-Charlie_Munger_%28cropped%29.jpg',
-  'richard-feynman': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/42/Richard_Feynman_Nobel.jpg/220px-Richard_Feynman_Nobel.jpg',
-  'naval-ravikant': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Naval_Ravikant_%28cropped%29.jpg/220px-Naval_Ravikant_%28cropped%29.jpg',
-  'paul-graham': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Paulgraham_240x320.jpg/220px-Paulgraham_240x320.jpg',
-  'zhang-yiming': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Zhang_Yiming_2020_%28cropped%29.png/220px-Zhang_Yiming_2020_%28cropped%29.png',
-  'andrej-karpathy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Andrej_Karpathy_in_2024_%28cropped%29.jpg/220px-Andrej_Karpathy_in_2024_%28cropped%29.jpg',
-  'ilya-sutskever': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Ilya_Sutskever_at_NeurIPS_2019_%28cropped%29.jpg/220px-Ilya_Sutskever_at_NeurIPS_2019_%28cropped%29.jpg',
-  'mrbeast': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/MrBeast_2023_%28cropped%29.jpg/220px-MrBeast_2023_%28cropped%29.jpg',
-  'donald-trump': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/220px-Donald_Trump_official_portrait.jpg',
-  'nassim-taleb': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Nassim_Nicholas_Taleb_2024_%28cropped%29.jpg/220px-Nassim_Nicholas_Taleb_2024_%28cropped%29.jpg',
-  'zhang-xuefeng': '',
+  'steve-jobs': 'https://upload.wikimedia.org/wikipedia/commons/d/dc/Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg',
+  'elon-musk': 'https://upload.wikimedia.org/wikipedia/commons/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg',
+  'charlie-munger': 'https://upload.wikimedia.org/wikipedia/commons/5/56/Charlie_Munger_%28cropped%29.jpg',
+  'richard-feynman': 'https://upload.wikimedia.org/wikipedia/en/4/42/Richard_Feynman_Nobel.jpg',
+  'naval-ravikant': 'https://upload.wikimedia.org/wikipedia/commons/5/55/Naval_Ravikant_%28cropped%29.jpg',
+  'paul-graham': 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Paulgraham_240x320.jpg',
+  'zhang-yiming': 'https://upload.wikimedia.org/wikipedia/commons/e/e0/The_CEO_Magazine_Cover.jpg',
+  'andrej-karpathy': 'https://avatars.githubusercontent.com/u/241138?v=4',
+  'ilya-sutskever': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Democratizing_Deep_Learning_with_Nervana_and_Google_Brain_%2815105407149%29_%28cropped%29.jpg',
+  'mrbeast': 'https://upload.wikimedia.org/wikipedia/commons/c/ce/MrBeast_2023_%28cropped%29.jpg',
+  'donald-trump': 'https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg',
+  'nassim-taleb': 'https://upload.wikimedia.org/wikipedia/commons/4/41/Nassim_Nicholas_Taleb_2013.jpg',
+  'zhang-xuefeng': 'https://upload.wikimedia.org/wikipedia/en/6/6d/Zhang_Xuefeng.jpg',
 };
 
 interface Message {
