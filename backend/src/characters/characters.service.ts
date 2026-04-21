@@ -92,9 +92,9 @@ export class CharactersService {
     const systemPrompt = this.loadSkillFile(slug) || def.system_prompt;
 
     // Create agent using existing service
-    const llmProvider = process.env.CHARACTER_LLM_PROVIDER || 'anthropic';
+    const llmProvider = process.env.CHARACTER_LLM_PROVIDER || 'zai';
     const llmApiKey = process.env.CHARACTER_LLM_API_KEY;
-    const llmModel = process.env.CHARACTER_LLM_MODEL || 'claude-sonnet-4-5';
+    const llmModel = process.env.CHARACTER_LLM_MODEL || 'glm-5';
 
     if (!llmApiKey) {
       this.logger.warn('CHARACTER_LLM_API_KEY not set — character agents will not work');
