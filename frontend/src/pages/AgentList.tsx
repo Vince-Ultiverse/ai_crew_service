@@ -5,17 +5,21 @@ import { api } from '../api/client';
 import AgentCard from '../components/AgentCard';
 import { useTheme } from '../theme';
 
+type Tab = 'custom' | 'character';
+
 export default function AgentList() {
   const { theme } = useTheme();
-  const { colors, pixelCard, pixelButton, pixelHeading, labels } = theme;
+  const { colors, pixelCard, pixelButton, pixelHeading, pixelButtonSmall, labels } = theme;
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>('custom');
 
   const load = () => {
-    api.getAgents().then(setAgents).catch(() => {}).finally(() => setLoading(false));
+    setLoading(true);
+    api.getAgents(tab).then(setAgents).catch(() => {}).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [tab]);
 
   const handleAction = async (id: string, action: 'start' | 'stop' | 'restart' | 'rebuild' | 'delete') => {
     try {
@@ -38,22 +42,41 @@ export default function AgentList() {
     }
   };
 
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    ...pixelButtonSmall(active ? colors.accent : colors.stopped),
+    fontSize: 9,
+    opacity: active ? 1 : 0.6,
+    cursor: 'pointer',
+  });
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ ...pixelHeading(), fontSize: 16 }}>
           {labels.pageHeadings.agentList}
         </h1>
-        <Link
-          to="/admin/agents/new"
-          style={{
-            ...pixelButton(colors.accent),
-            textDecoration: 'none',
-            fontSize: 10,
-          }}
-        >
-          {labels.newAgent}
-        </Link>
+        {tab === 'custom' && (
+          <Link
+            to="/admin/agents/new"
+            style={{
+              ...pixelButton(colors.accent),
+              textDecoration: 'none',
+              fontSize: 10,
+            }}
+          >
+            {labels.newAgent}
+          </Link>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <button onClick={() => setTab('custom')} style={tabStyle(tab === 'custom')}>
+          Custom Agents
+        </button>
+        <button onClick={() => setTab('character')} style={tabStyle(tab === 'character')}>
+          Character Personas
+        </button>
       </div>
 
       {loading ? (
@@ -79,18 +102,22 @@ export default function AgentList() {
             marginBottom: 16,
             lineHeight: 2,
           }}>
-            {labels.emptyOffice}
+            {tab === 'character'
+              ? 'No character agents provisioned yet. Visit the Characters page to start a conversation.'
+              : labels.emptyOffice}
           </div>
-          <Link
-            to="/admin/agents/new"
-            style={{
-              ...pixelButton(colors.accent),
-              textDecoration: 'none',
-              fontSize: 10,
-            }}
-          >
-            {labels.hirePrompt}
-          </Link>
+          {tab === 'custom' && (
+            <Link
+              to="/admin/agents/new"
+              style={{
+                ...pixelButton(colors.accent),
+                textDecoration: 'none',
+                fontSize: 10,
+              }}
+            >
+              {labels.hirePrompt}
+            </Link>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>

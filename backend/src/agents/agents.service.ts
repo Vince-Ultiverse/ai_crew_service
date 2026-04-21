@@ -22,9 +22,10 @@ export class AgentsService {
     private dockerService: DockerService,
   ) {}
 
-  async findAll(): Promise<Agent[]> {
+  async findAll(type?: string): Promise<Agent[]> {
+    const agentType = type === 'character' ? 'character' : type === 'all' ? undefined : 'custom';
     return this.agentRepo.find({
-      where: { agent_type: 'custom' },
+      ...(agentType ? { where: { agent_type: agentType } } : {}),
       order: { created_at: 'DESC' },
     });
   }

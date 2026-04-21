@@ -41,7 +41,7 @@ export const api = {
   getStats: () => request<DashboardStats>('/dashboard/stats'),
 
   // Agents
-  getAgents: () => request<Agent[]>('/agents'),
+  getAgents: (type?: string) => request<Agent[]>(`/agents${type ? `?type=${type}` : ''}`),
   getAgent: (id: string) => request<Agent>(`/agents/${id}`),
   createAgent: (data: CreateAgentPayload) =>
     request<Agent>('/agents', { method: 'POST', body: JSON.stringify(data) }),

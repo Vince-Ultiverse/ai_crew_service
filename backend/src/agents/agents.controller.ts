@@ -22,8 +22,8 @@ export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
   @Get()
-  findAll() {
-    return this.agentsService.findAll();
+  findAll(@Query('type') type?: string) {
+    return this.agentsService.findAll(type);
   }
 
   @Post()
