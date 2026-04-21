@@ -28,7 +28,7 @@ export default function AgentCard({ agent, onAction }: {
         }
         <div style={{ flex: 1, minWidth: 0 }}>
           <Link
-            to={`/agents/${agent.id}`}
+            to={`/admin/agents/${agent.id}`}
             style={{
               ...pixelHeading(),
               fontSize: 11,

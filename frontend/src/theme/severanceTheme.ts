@@ -51,11 +51,10 @@ export const severanceTheme: Theme = {
     appSubtitle: 'Macrodata Refinement',
     navDirectory: 'Departments',
     navItems: [
-      { path: '/', label: 'Overview', icon: '\u{1F5A5}' },
-      { path: '/agents', label: 'Innies', icon: '\u{1F9D1}\u{200D}\u{1F4BC}' },
-      { path: '/projects', label: 'Refinements', icon: '\u{1F5C2}' },
-      { path: '/templates', label: 'Protocols', icon: '\u{1F4CB}' },
-      { path: '/characters', label: 'Personas', icon: '\u{1F9E0}' },
+      { path: '/admin', label: 'Overview', icon: '\u{1F5A5}' },
+      { path: '/admin/agents', label: 'Innies', icon: '\u{1F9D1}\u{200D}\u{1F4BC}' },
+      { path: '/admin/projects', label: 'Refinements', icon: '\u{1F5C2}' },
+      { path: '/admin/templates', label: 'Protocols', icon: '\u{1F4CB}' },
     ],
     pageHeadings: {
       dashboard: 'Department Overview',

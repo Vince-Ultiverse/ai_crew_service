@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { colors, labels } = theme;
   const location = useLocation();
   const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+    path === '/admin' ? location.pathname === '/admin' : location.pathname.startsWith(path);
 
   const isSeverance = theme.name === 'severance';
 

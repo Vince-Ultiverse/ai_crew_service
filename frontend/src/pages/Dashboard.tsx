@@ -32,7 +32,7 @@ export default function Dashboard() {
           {labels.pageHeadings.dashboard}
         </h1>
         <Link
-          to="/agents/new"
+          to="/admin/agents/new"
           style={{
             ...pixelButton(colors.accent),
             textDecoration: 'none',

@@ -26,7 +26,7 @@ export default function AgentDetail() {
 
   const load = () => {
     if (!id) return;
-    api.getAgent(id).then(setAgent).catch(() => navigate('/agents'));
+    api.getAgent(id).then(setAgent).catch(() => navigate('/admin/agents'));
   };
 
   useEffect(() => { load(); }, [id]);
@@ -75,7 +75,7 @@ export default function AgentDetail() {
       if (action === 'delete') {
         if (!confirm('Delete this agent?')) return;
         await api.deleteAgent(id);
-        navigate('/agents');
+        navigate('/admin/agents');
         return;
       }
       if (action === 'rebuild') {
@@ -152,7 +152,7 @@ export default function AgentDetail() {
           {agent.status !== 'creating' && (
             <DetailActionBtn label="Rebuild" bg="#6c63ff" onClick={() => handleAction('rebuild')} />
           )}
-          <Link to={`/agents/${agent.id}/edit`} style={{
+          <Link to={`/admin/agents/${agent.id}/edit`} style={{
             ...pixelButtonSmall(colors.card, colors.accent),
             textDecoration: 'none',
             border: `2px solid ${colors.accent}`,

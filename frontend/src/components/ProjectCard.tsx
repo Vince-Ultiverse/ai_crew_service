@@ -33,7 +33,7 @@ export default function ProjectCard({ project, onAction }: {
         <div style={{ fontSize: 24 }}>{STATUS_EMOJI[project.status] || '\u{1F4CB}'}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Link
-            to={`/projects/${project.id}`}
+            to={`/admin/projects/${project.id}`}
             style={{
               ...pixelHeading(),
               fontSize: 11,

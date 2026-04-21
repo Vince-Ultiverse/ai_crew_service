@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import AgentList from './pages/AgentList';
 import AgentCreate from './pages/AgentCreate';
@@ -11,7 +12,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import CharacterList from './pages/CharacterList';
 import CharacterChat from './pages/CharacterChat';
 
-export default function App() {
+function AdminRoutes() {
   return (
     <Layout>
       <Routes>
@@ -24,9 +25,21 @@ export default function App() {
         <Route path="/projects/new" element={<ProjectCreate />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/templates" element={<Templates />} />
-        <Route path="/characters" element={<CharacterList />} />
-        <Route path="/characters/:slug" element={<CharacterChat />} />
       </Routes>
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Public pages — no sidebar */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/characters" element={<CharacterList />} />
+      <Route path="/characters/:slug" element={<CharacterChat />} />
+
+      {/* Admin console — with sidebar */}
+      <Route path="/admin/*" element={<AdminRoutes />} />
+    </Routes>
   );
 }

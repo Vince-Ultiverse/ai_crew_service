@@ -53,7 +53,7 @@ export default function ProjectCreate() {
         }
       }
 
-      navigate(`/projects/${project.id}`);
+      navigate(`/admin/projects/${project.id}`);
     } catch (err: any) {
       alert(`Failed to create project: ${err.message}`);
       setSaving(false);
@@ -225,7 +225,7 @@ export default function ProjectCreate() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/projects')}
+              onClick={() => navigate('/admin/projects')}
               style={pixelButton(colors.stopped)}
             >
               Cancel

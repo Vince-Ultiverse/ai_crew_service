@@ -51,11 +51,10 @@ export const pixelTheme: Theme = {
     appSubtitle: 'Crew HQ',
     navDirectory: 'Directory',
     navItems: [
-      { path: '/', label: 'Lobby', icon: '\u{1F3E2}' },
-      { path: '/agents', label: 'Desks', icon: '\u{1FA91}' },
-      { path: '/projects', label: 'War Room', icon: '\u{1F4AC}' },
-      { path: '/templates', label: 'Archive', icon: '\u{1F4C1}' },
-      { path: '/characters', label: 'Characters', icon: '\u{1F3AD}' },
+      { path: '/admin', label: 'Lobby', icon: '\u{1F3E2}' },
+      { path: '/admin/agents', label: 'Desks', icon: '\u{1FA91}' },
+      { path: '/admin/projects', label: 'War Room', icon: '\u{1F4AC}' },
+      { path: '/admin/templates', label: 'Archive', icon: '\u{1F4C1}' },
     ],
     pageHeadings: {
       dashboard: 'Office Overview',

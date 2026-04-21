@@ -199,7 +199,7 @@ export default function Templates() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => navigate(`/agents/new?template=${t.id}`)} style={pixelButtonSmall(colors.accent)}>
+                <button onClick={() => navigate(`/admin/agents/new?template=${t.id}`)} style={pixelButtonSmall(colors.accent)}>
                   Create Agent
                 </button>
                 <button onClick={() => setEditing(t)} style={pixelButtonSmall(colors.card, colors.accent)}>

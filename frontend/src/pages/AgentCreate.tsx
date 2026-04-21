@@ -43,7 +43,7 @@ export default function AgentCreate() {
           setLoading(false);
         })
         .catch(() => {
-          navigate('/agents');
+          navigate('/admin/agents');
         });
     }
   }, [id, navigate]);
@@ -52,10 +52,10 @@ export default function AgentCreate() {
     try {
       if (isEdit && id) {
         await api.updateAgent(id, data);
-        navigate(`/agents/${id}`);
+        navigate(`/admin/agents/${id}`);
       } else {
         const agent = await api.createAgent(data);
-        navigate(`/agents/${agent.id}`);
+        navigate(`/admin/agents/${agent.id}`);
       }
     } catch (e: any) {
       alert(`Failed: ${e.message}`);

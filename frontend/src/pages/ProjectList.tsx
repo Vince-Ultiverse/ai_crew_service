@@ -44,7 +44,7 @@ export default function ProjectList() {
           {labels.pageHeadings.projectList}
         </h1>
         <Link
-          to="/projects/new"
+          to="/admin/projects/new"
           style={{
             ...pixelButton(colors.accent),
             textDecoration: 'none',
@@ -81,7 +81,7 @@ export default function ProjectList() {
             No projects yet...
           </div>
           <Link
-            to="/projects/new"
+            to="/admin/projects/new"
             style={{
               ...pixelButton(colors.accent),
               textDecoration: 'none',

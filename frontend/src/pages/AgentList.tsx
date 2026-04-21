@@ -45,7 +45,7 @@ export default function AgentList() {
           {labels.pageHeadings.agentList}
         </h1>
         <Link
-          to="/agents/new"
+          to="/admin/agents/new"
           style={{
             ...pixelButton(colors.accent),
             textDecoration: 'none',
@@ -82,7 +82,7 @@ export default function AgentList() {
             {labels.emptyOffice}
           </div>
           <Link
-            to="/agents/new"
+            to="/admin/agents/new"
             style={{
               ...pixelButton(colors.accent),
               textDecoration: 'none',

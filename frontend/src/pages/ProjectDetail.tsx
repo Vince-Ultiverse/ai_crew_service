@@ -24,7 +24,7 @@ export default function ProjectDetail() {
     api.getProject(id).then((p) => {
       setProject(p);
       api.getProjectSlackStatus(id).then(setSlackStatus).catch(() => {});
-    }).catch(() => navigate('/projects'));
+    }).catch(() => navigate('/admin/projects'));
   }, [id, navigate]);
 
   useEffect(() => { load(); }, [load]);
@@ -72,7 +72,7 @@ export default function ProjectDetail() {
       if (action === 'delete') {
         if (!confirm('Delete this project and all its messages?')) return;
         await api.deleteProject(id);
-        navigate('/projects');
+        navigate('/admin/projects');
         return;
       }
       if (action === 'start') await api.startProject(id);
