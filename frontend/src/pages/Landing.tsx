@@ -517,7 +517,7 @@ export default function Landing() {
         <div style={{
           fontFamily: FONT.mono, fontSize: 12, color: C.textMuted,
         }}>
-          MindOS &mdash; distilled minds, real conversations
+          MindOS &mdash; distilled minds, real conversations.
         </div>
       </footer>
     </div>
