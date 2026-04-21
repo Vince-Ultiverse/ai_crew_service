@@ -32,6 +32,9 @@ services:
       SLACK_OAUTH_REDIRECT_URI: ${SLACK_OAUTH_REDIRECT_URI:-http://localhost:3000/api/slack-oauth/callback}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
       EXTRA_ALLOWED_ORIGINS: ${EXTRA_ALLOWED_ORIGINS:-}
+      CHARACTER_LLM_API_KEY: ${CHARACTER_LLM_API_KEY:-}
+      CHARACTER_LLM_PROVIDER: ${CHARACTER_LLM_PROVIDER:-zai}
+      CHARACTER_LLM_MODEL: ${CHARACTER_LLM_MODEL:-glm-5}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOST_DATA_DIR:-/home/github-runner/ai_crew_data}:/app/data
