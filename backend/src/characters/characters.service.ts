@@ -106,6 +106,13 @@ export class CharactersService {
           `- Match the tone, vocabulary, and thinking patterns described in the framework`,
           `- When uncertain, say so honestly in character — ${def.name} would admit what they don't know`,
           ``,
+          `## Reference Materials`,
+          ``,
+          `Your detailed research data (books, interviews, speeches, social media analysis, critic perspectives, decision records, timeline) is available in the workspace:`,
+          `- \`references/\` — extraction framework and methodology`,
+          `- \`research-data/\` — primary source materials organized by category`,
+          `Read these files when you need to cite specific sources, verify facts, or deepen your response with real evidence.`,
+          ``,
           `## Your Complete Cognitive Framework:`,
           ``,
           skillContent,
@@ -135,6 +142,9 @@ export class CharactersService {
       cpu_limit: 4,
     });
 
+    // Copy research data into agent workspace
+    this.copyResearchData(slug, agent.slug);
+
     // Auto-start
     try {
       agent = await this.agentsService.start(agent.id);
@@ -147,10 +157,12 @@ export class CharactersService {
 
   /**
    * Load SKILL.md content from the skills directory.
-   * Tries both src/ (dev mode) and dist/ (compiled) locations.
+   * Tries {slug}/SKILL.md first (new structure), then {slug}.md (legacy).
    */
   private loadSkillFile(slug: string): string | null {
     const candidates = [
+      path.join(__dirname, 'skills', slug, 'SKILL.md'),
+      path.join(process.cwd(), 'src', 'characters', 'skills', slug, 'SKILL.md'),
       path.join(__dirname, 'skills', `${slug}.md`),
       path.join(process.cwd(), 'src', 'characters', 'skills', `${slug}.md`),
     ];
@@ -163,5 +175,54 @@ export class CharactersService {
     }
     this.logger.warn(`Skill file not found for ${slug}`);
     return null;
+  }
+
+  /**
+   * Find the skills base directory for a given slug.
+   */
+  private findSkillsDir(slug: string): string | null {
+    const candidates = [
+      path.join(__dirname, 'skills', slug),
+      path.join(process.cwd(), 'src', 'characters', 'skills', slug),
+    ];
+    for (const dir of candidates) {
+      if (fs.existsSync(path.join(dir, 'SKILL.md'))) return dir;
+    }
+    return null;
+  }
+
+  /**
+   * Copy references/research-data from skills dir into agent workspace.
+   */
+  private copyResearchData(slug: string, agentSlug: string): void {
+    const skillsDir = this.findSkillsDir(slug);
+    if (!skillsDir) return;
+
+    const dataDir = process.env.HOST_DATA_DIR
+      ? path.join('/app/data', 'agents', agentSlug, 'workspace')
+      : path.join(process.cwd(), 'data', 'agents', agentSlug, 'workspace');
+
+    const refsSource = path.join(skillsDir, 'references');
+    if (!fs.existsSync(refsSource)) return;
+
+    const refsDest = path.join(dataDir, 'references');
+    this.copyDirRecursive(refsSource, refsDest);
+    this.logger.log(`Copied research data for ${slug} to ${refsDest}`);
+  }
+
+  /**
+   * Recursively copy a directory.
+   */
+  private copyDirRecursive(src: string, dest: string): void {
+    fs.mkdirSync(dest, { recursive: true, mode: 0o777 });
+    for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        this.copyDirRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
   }
 }
