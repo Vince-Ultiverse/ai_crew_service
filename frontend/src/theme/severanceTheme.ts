@@ -55,6 +55,7 @@ export const severanceTheme: Theme = {
       { path: '/agents', label: 'Innies', icon: '\u{1F9D1}\u{200D}\u{1F4BC}' },
       { path: '/projects', label: 'Refinements', icon: '\u{1F5C2}' },
       { path: '/templates', label: 'Protocols', icon: '\u{1F4CB}' },
+      { path: '/characters', label: 'Personas', icon: '\u{1F9E0}' },
     ],
     pageHeadings: {
       dashboard: 'Department Overview',

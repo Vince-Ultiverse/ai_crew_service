@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SlackOAuthModule } from './slack-oauth/slack-oauth.module';
 import { ProjectsModule } from './projects/projects.module';
+import { CharactersModule } from './characters/characters.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ProjectsModule } from './projects/projects.module';
     DashboardModule,
     SlackOAuthModule,
     ProjectsModule,
+    CharactersModule,
   ],
 })
 export class AppModule {}

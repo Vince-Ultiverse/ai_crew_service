@@ -13,6 +13,18 @@ export class CreateAgentDto {
 
   @IsOptional()
   @IsString()
+  agent_type?: string;
+
+  @IsOptional()
+  @IsString()
+  tagline?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar_url?: string;
+
+  @IsOptional()
+  @IsString()
   slack_bot_token?: string;
 
   @IsOptional()

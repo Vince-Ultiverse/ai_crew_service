@@ -23,7 +23,10 @@ export class AgentsService {
   ) {}
 
   async findAll(): Promise<Agent[]> {
-    return this.agentRepo.find({ order: { created_at: 'DESC' } });
+    return this.agentRepo.find({
+      where: { agent_type: 'custom' },
+      order: { created_at: 'DESC' },
+    });
   }
 
   async findOne(id: string): Promise<Agent> {
@@ -260,7 +263,7 @@ export class AgentsService {
     stopped: number;
     error: number;
   }> {
-    const agents = await this.agentRepo.find();
+    const agents = await this.agentRepo.find({ where: { agent_type: 'custom' } });
     return {
       total: agents.length,
       running: agents.filter((a) => a.status === 'running').length,

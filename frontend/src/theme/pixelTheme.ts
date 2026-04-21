@@ -55,6 +55,7 @@ export const pixelTheme: Theme = {
       { path: '/agents', label: 'Desks', icon: '\u{1FA91}' },
       { path: '/projects', label: 'War Room', icon: '\u{1F4AC}' },
       { path: '/templates', label: 'Archive', icon: '\u{1F4C1}' },
+      { path: '/characters', label: 'Characters', icon: '\u{1F3AD}' },
     ],
     pageHeadings: {
       dashboard: 'Office Overview',

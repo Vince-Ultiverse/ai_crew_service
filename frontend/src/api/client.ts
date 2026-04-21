@@ -1,4 +1,4 @@
-import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage, Project, ProjectMessage, CreateProjectPayload, ProjectTask, CreateTaskPayload, UpdateTaskPayload } from '../types';
+import type { Agent, Template, DashboardStats, CreateAgentPayload, ChatMessage, Project, ProjectMessage, CreateProjectPayload, ProjectTask, CreateTaskPayload, UpdateTaskPayload, CharacterListItem } from '../types';
 
 const BASE = '/api';
 
@@ -134,4 +134,9 @@ export const api = {
     request<{ connected: boolean; channelId: string | null; channelName: string | null; listening: boolean }>(
       `/projects/${id}/slack/status`,
     ),
+
+  // Characters
+  getCharacters: () => request<CharacterListItem[]>('/characters'),
+  provisionCharacter: (slug: string) =>
+    request<Agent>(`/characters/${slug}/provision`, { method: 'POST' }),
 };

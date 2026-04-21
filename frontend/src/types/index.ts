@@ -4,6 +4,9 @@ export interface Agent {
   slug: string;
   status: 'running' | 'stopped' | 'error' | 'creating' | 'starting';
   role: string | null;
+  agent_type: string;
+  tagline: string | null;
+  avatar_url: string | null;
   container_id: string | null;
   slack_bot_token: string | null;
   slack_app_token: string | null;
@@ -147,6 +150,9 @@ export interface CreateAgentPayload {
   name: string;
   slug: string;
   role?: string;
+  agent_type?: string;
+  tagline?: string;
+  avatar_url?: string;
   slack_bot_token?: string;
   slack_app_token?: string;
   slack_enabled?: boolean;
@@ -163,4 +169,16 @@ export interface CreateAgentPayload {
   memory_limit?: string;
   cpu_limit?: number;
   template_id?: string;
+}
+
+export interface CharacterListItem {
+  id: string | null;
+  slug: string;
+  name: string;
+  name_zh: string | null;
+  tagline: string;
+  role: string;
+  status: string;
+  agent_type: string;
+  gateway_port?: number | null;
 }

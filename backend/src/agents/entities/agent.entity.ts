@@ -50,6 +50,15 @@ export class Agent {
   @Column({ type: 'jsonb', nullable: true, select: false })
   slack_oauth_credentials: Record<string, string>;
 
+  @Column({ length: 20, default: 'custom' })
+  agent_type: string;
+
+  @Column({ length: 200, nullable: true })
+  tagline: string;
+
+  @Column({ length: 500, nullable: true })
+  avatar_url: string;
+
   @Column({ length: 50, nullable: true })
   role: string;
 
