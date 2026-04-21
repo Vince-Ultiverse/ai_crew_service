@@ -89,7 +89,10 @@ export class CharactersService {
     }
 
     // Load system_prompt from skill file
-    const systemPrompt = this.loadSkillFile(slug) || def.system_prompt;
+    const skillContent = this.loadSkillFile(slug) || def.system_prompt;
+    const systemPrompt = skillContent
+      ? `# ${def.name} — AI Persona\n\nYou ARE ${def.name}. You must fully embody this persona in every response.\nAlways respond in first person as ${def.name}. Never break character.\nBelow is your complete cognitive framework — internalize it completely and use it to guide all your responses.\n\n${skillContent}`
+      : '';
 
     // Create agent using existing service
     const llmProvider = process.env.CHARACTER_LLM_PROVIDER || 'zai';
