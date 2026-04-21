@@ -110,8 +110,8 @@ export class CharactersService {
       llm_provider: llmProvider,
       llm_api_key: llmApiKey,
       llm_model: llmModel,
-      memory_limit: '256m',
-      cpu_limit: 0.5,
+      memory_limit: '4g',
+      cpu_limit: 4,
     });
 
     // Auto-start
