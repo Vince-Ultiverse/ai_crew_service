@@ -25,6 +25,7 @@ jobs:
           SLACK_CONFIG_TOKEN=${{ vars.SLACK_CONFIG_TOKEN }}
           SLACK_CONFIG_REFRESH_TOKEN=${{ vars.SLACK_CONFIG_REFRESH_TOKEN }}
           SLACK_OAUTH_REDIRECT_URI=${{ vars.SLACK_OAUTH_REDIRECT_URI }}
+          CHARACTER_LLM_API_KEY=${{ vars.CHARACTER_LLM_API_KEY }}
           EOF
 
       - name: Remove stale containers
