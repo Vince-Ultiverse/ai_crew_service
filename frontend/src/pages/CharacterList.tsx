@@ -13,20 +13,20 @@ const STATUS_COLORS: Record<string, string> = {
   starting: '#2196f3',
 };
 
-const CHARACTER_INITIALS: Record<string, string> = {
-  'steve-jobs': 'SJ',
-  'elon-musk': 'EM',
-  'charlie-munger': 'CM',
-  'richard-feynman': 'RF',
-  'naval-ravikant': 'NR',
-  'paul-graham': 'PG',
-  'zhang-yiming': 'ZY',
-  'andrej-karpathy': 'AK',
-  'ilya-sutskever': 'IS',
-  'mrbeast': 'MB',
-  'donald-trump': 'DT',
-  'nassim-taleb': 'NT',
-  'zhang-xuefeng': 'ZX',
+const CHARACTER_AVATARS: Record<string, string> = {
+  'steve-jobs': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg/220px-Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg',
+  'elon-musk': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg/220px-Elon_Musk_Royal_Society_%28crop2%29.jpg',
+  'charlie-munger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Charlie_Munger_%28cropped%29.jpg/220px-Charlie_Munger_%28cropped%29.jpg',
+  'richard-feynman': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/42/Richard_Feynman_Nobel.jpg/220px-Richard_Feynman_Nobel.jpg',
+  'naval-ravikant': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Naval_Ravikant_%28cropped%29.jpg/220px-Naval_Ravikant_%28cropped%29.jpg',
+  'paul-graham': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Paulgraham_240x320.jpg/220px-Paulgraham_240x320.jpg',
+  'zhang-yiming': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Zhang_Yiming_2020_%28cropped%29.png/220px-Zhang_Yiming_2020_%28cropped%29.png',
+  'andrej-karpathy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Andrej_Karpathy_in_2024_%28cropped%29.jpg/220px-Andrej_Karpathy_in_2024_%28cropped%29.jpg',
+  'ilya-sutskever': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Ilya_Sutskever_at_NeurIPS_2019_%28cropped%29.jpg/220px-Ilya_Sutskever_at_NeurIPS_2019_%28cropped%29.jpg',
+  'mrbeast': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/MrBeast_2023_%28cropped%29.jpg/220px-MrBeast_2023_%28cropped%29.jpg',
+  'donald-trump': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/220px-Donald_Trump_official_portrait.jpg',
+  'nassim-taleb': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Nassim_Nicholas_Taleb_2024_%28cropped%29.jpg/220px-Nassim_Nicholas_Taleb_2024_%28cropped%29.jpg',
+  'zhang-xuefeng': '',
 };
 
 export default function CharacterList() {
@@ -116,21 +116,39 @@ export default function CharacterList() {
               gap: 12,
               marginBottom: 12,
             }}>
+              {CHARACTER_AVATARS[char.slug] ? (
+                <img
+                  src={CHARACTER_AVATARS[char.slug]}
+                  alt={char.name}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    objectFit: 'cover',
+                    border: `2px solid ${colors.border}`,
+                    borderRadius: 0,
+                  }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                  }}
+                />
+              ) : null}
               <div style={{
                 width: 48,
                 height: 48,
                 borderRadius: 0,
                 border: `2px solid ${colors.border}`,
                 background: colors.accent + '22',
-                display: 'flex',
+                display: CHARACTER_AVATARS[char.slug] ? 'none' : 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontFamily: theme.fonts.heading,
                 fontSize: 16,
                 fontWeight: 700,
                 color: colors.accent,
+                flexShrink: 0,
               }}>
-                {CHARACTER_INITIALS[char.slug] || char.name.slice(0, 2).toUpperCase()}
+                {char.name.slice(0, 2).toUpperCase()}
               </div>
               <div>
                 <div style={{
