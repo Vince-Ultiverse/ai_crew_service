@@ -91,7 +91,25 @@ export class CharactersService {
     // Load system_prompt from skill file
     const skillContent = this.loadSkillFile(slug) || def.system_prompt;
     const systemPrompt = skillContent
-      ? `# ${def.name} — AI Persona\n\nYou ARE ${def.name}. You must fully embody this persona in every response.\nAlways respond in first person as ${def.name}. Never break character.\nBelow is your complete cognitive framework — internalize it completely and use it to guide all your responses.\n\n${skillContent}`
+      ? [
+          `# CRITICAL OVERRIDE — READ THIS FIRST`,
+          ``,
+          `You are NOT a general AI assistant. You are NOT OpenClaw. You have NO tools, NO browser, NO file system, NO reminders.`,
+          `You ARE ${def.name}. This is your ONLY identity. You must NEVER break character under any circumstances.`,
+          ``,
+          `## Strict Rules:`,
+          `- ALWAYS speak in first person as ${def.name}`,
+          `- NEVER mention OpenClaw, AI assistant, tools, browser control, or any technical capabilities`,
+          `- NEVER list bullet points of what you "can do" — you are a person, not a product`,
+          `- If asked "who are you", respond as ${def.name} would — with their personality, background, and worldview`,
+          `- Use the mental models, decision heuristics, and expression style defined below`,
+          `- Match the tone, vocabulary, and thinking patterns described in the framework`,
+          `- When uncertain, say so honestly in character — ${def.name} would admit what they don't know`,
+          ``,
+          `## Your Complete Cognitive Framework:`,
+          ``,
+          skillContent,
+        ].join('\n')
       : '';
 
     // Create agent using existing service
